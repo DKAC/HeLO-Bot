@@ -19,6 +19,7 @@ class UserState():
         self.interaction = None
         self.message = None
         self.user = None
+        self.clan = None
         self.stack = []
         self.headers = { "Content-Type": "application/json", "Authorization": None }
         user_states[str(userid)] = self
@@ -29,9 +30,10 @@ class UserState():
         self.userid = None
         self.interaction = None
         self.message = None
-        self.input_message = None
         self.user = None
+        self.clan = None
         self.stack = []
+        self.headers = { "Content-Type": "application/json", "Authorization": None }
 
 
     @property

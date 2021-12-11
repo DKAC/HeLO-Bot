@@ -13,7 +13,7 @@ async def match_confirm(state, cmd : SimpleNamespace):
     logging.info(f"{cmd}")    
     
     if cmd.result != None:
-        return Return.cmd(state, result = { "user1": state.userid })
+        return Return.cmd(state, result = { "conf1": state.userid })
     
     cmd = state.current.options[cmd.input]
     logging.info(f"{cmd}")

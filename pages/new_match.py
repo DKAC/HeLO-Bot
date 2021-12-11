@@ -1,6 +1,5 @@
 import logging
-from database_models import Clans
-
+from database_models import Clans, Matches, Match
 from pages.select_clan import *
 from object_models import *
 
@@ -14,34 +13,38 @@ async def new_match(state, cmd : SimpleNamespace):
 
     if cmd.result == None:
         cmd = state.current.options[cmd.input]
-        state.push(NewMatch(state, cmd.clan1, cmd.next_step))
+        state.push(NewMatch(state, clan1=Clans.get(cmd.clan1).tag, clan1_id=cmd.clan1, next_step=cmd.next_step))
     else:
         result = SimpleNamespace(**cmd.result)
 
         if state.current.next_step == "CLAN1":
             logging.info(f"CLAN1: {result.selected}")    
-            state.current.clan1 = result.selected            
+            state.current.clan1_id = result.selected    
+            state.current.clan1 = Clans.get(result.selected).tag
             state.current.next_step = "COOP1" if not result.is_showing_coop else "CLAN2"
 
         elif state.current.next_step == "COOP1":
             logging.info(f"COOP1: {result.selected}")
-            state.current.coop1 = result.selected
+            state.current.coop1_id = result.selected
+            state.current.coop1 = Clans.get(result.selected).tag
             state.current.next_step = "CLAN2"
             
         elif state.current.next_step == "CLAN2":
             logging.info(f"CLAN2: {result.selected}")
-            state.current.clan2 = result.selected
+            state.current.clan2_id = result.selected
+            state.current.clan2 = Clans.get(result.selected).tag
             state.current.next_step = "COOP2" if not result.is_showing_coop else "RESULT"
 
         elif state.current.next_step == "COOP2":
             logging.info(f"COOP2: {result.selected}")
-            state.current.coop2 = result.selected
+            state.current.coop2_id = result.selected
+            state.current.coop2 = Clans.get(result.selected).tag
             state.current.next_step = "RESULT"
             
         elif state.current.next_step == "RESULT":
-            logging.info(f"RESULT: {result.side1} {result.score1}:{5 - result.score1}")
-            state.current.score1 = result.score1
-            state.current.score2 = 5 - result.score1
+            logging.info(f"RESULT: {result.side1} {result.caps1}:{5 - result.caps1}")
+            state.current.caps1 = result.caps1
+            state.current.caps2 = 5 - result.caps1
             state.current.side1 = result.side1
             state.current.side2 = "Axis" if result.side1 == "Allies" else "Allies"
             state.current.next_step = "DATE"
@@ -57,20 +60,27 @@ async def new_match(state, cmd : SimpleNamespace):
             state.current.next_step = "CONFIRM"
             
         elif state.current.next_step == "CONFIRM":
-            logging.info(f"CONFIRM")
-            state.current.next_step = "DONE" # todo
+            logging.info(f"CONFIRM")            
+            m = state.current
+            match_id = Match.get_match_id(date=m.date, clan1=m.clan1, clan2=m.clan2)
+            logging.info(f"write to DB: {match_id}")
+            match = Match(match_id=match_id,
+                clan1=m.clan1, clan1_id=m.clan1_id, coop1=m.coop1, coop1_id=m.coop1_id, clan2=m.clan2, clan2_id=m.clan2_id, coop2=m.coop2, coop2_id=m.coop2_id, side1=m.side1, side2=m.side2, caps1=m.caps1, caps2=m.caps2, map=m.map, date=m.date, duration=m.duration, factor=m.factor, event=m.event, conf1=state.user.userid, conf2=None
+            )
+            Matches.create(state, match)
+            state.current.next_step = "DONE"
             
     if state.current.next_step == "CLAN1": 
         return SearchClan.cmd(state, option = SearchClanOption( title = "Search 1. Clan", is_showing_coop = True ))
     
     if state.current.next_step == "COOP1": 
-        return SearchClan.cmd(state, option = SearchClanOption( title = "Search 1. Clans Coop partner", is_showing_coop = False ))
+        return SearchClan.cmd(state, option = SearchClanOption( title = "Search 1. Clans Coop partner" ))
     
     if state.current.next_step == "CLAN2":  
         return SearchClan.cmd(state, option = SearchClanOption( title = "Search 2. Clan", is_showing_coop = True ))    
     
     if state.current.next_step == "COOP2":  
-        return SearchClan.cmd(state, option = SearchClanOption( title = "Search 2. Clans Coop partner", is_showing_coop = False ))
+        return SearchClan.cmd(state, option = SearchClanOption( title = "Search 2. Clans Coop partner" ))
     
     if state.current.next_step == "RESULT": 
         return MatchResult.cmd(state)
@@ -82,23 +92,7 @@ async def new_match(state, cmd : SimpleNamespace):
         return SelectMap.cmd(state)
     
     if state.current.next_step == "CONFIRM": 
-        # todo - write to database            
-        confirmed_option = MatchConfirmOption( 
-            clan1 = state.current.clan1,
-            coop1 = state.current.coop2,
-            clan2 = state.current.clan2,
-            coop2 = state.current.coop2,
-            side1 = state.current.side1,
-            side2 = state.current.side2,
-            score1 = state.current.score1,
-            score2 = state.current.score2,
-            date = state.current.date,
-            map = state.current.map,
-            user1 = state.userid
-        )
-        logging.info(f"write to DB: {confirmed_option}")
-
-        return MatchConfirm.cmd(state, option = confirmed_option)
+        return MatchConfirm.cmd(state)
     
     if state.current.next_step == "DONE":  
         return Home.cmd(state)
@@ -111,23 +105,24 @@ def match_description(state):
     clans = Clans.get()
     
     # todo store id instead of tag
-    flag1 = [clan.flag for clan in clans if clan.tag == state.clan1]
-    flag1c = [clan.flag for clan in clans if clan.tag == state.coop1]
-    flag2 = [clan.flag for clan in clans if clan.tag == state.clan2]
-    flag2c = [clan.flag for clan in clans if clan.tag == state.coop2]
+    dummy = Clan("dummy", tag = "???")
+    clan1 = [clan for clan in clans if clan.id == state.clan1_id][0] if state.clan1 != None else dummy
+    coop1 = [clan for clan in clans if clan.id == state.coop1_id][0] if state.coop1 != None else dummy
+    clan2 = [clan for clan in clans if clan.id == state.clan2_id][0] if state.clan2 != None else dummy
+    coop2 = [clan for clan in clans if clan.id == state.coop2_id][0] if state.coop2 != None else dummy
     
     s = "**New Match**\n"
-    s += f"{flag1[0]} " if len(flag1) > 0 else ""
-    s += state.clan1 if state.clan1 != None else "???"
-    s += " & " if state.coop1 != None else ""
-    s += f"{flag1c[0]} " if len(flag1c) > 0 else ""
-    s += state.coop1 if state.coop1 != None else ""
+    s += f"{clan1.flag} "   if clan1.flag != None else ""
+    s += f"{clan1.tag}"
+    s += " & "              if state.coop1 != None else ""
+    s += f"{coop1.flag} "   if coop1.flag  != None else ""
+    s += f"{coop1.tag}"     if state.coop1 != None else ""
     s += " vs. "
-    s += f"{flag2[0]} " if len(flag2) > 0 else ""
-    s += state.clan2 if state.clan2 != None else "???"
-    s += " & " if state.coop2 != None else ""
-    s += f"{flag2c[0]} " if len(flag2c) > 0 else ""
-    s += state.coop2 if state.coop2 != None else ""
+    s += f"{clan2.flag} "   if clan2.flag != None else ""
+    s += f"{clan2.tag}"
+    s += " & "              if state.coop2 != None else ""
+    s += f"{coop2.flag} "   if coop2.flag != None else ""
+    s += f"{coop2.tag}"     if state.coop2 != None else ""
     s += "\n"
     s += state.date if state.date != None else "???"
     s += "\n"
@@ -135,9 +130,9 @@ def match_description(state):
     s += "\n"
     s += state.side1 if state.side1 != None else "???"
     s += " "
-    s += str(state.score1) if state.score1 != None else "?"
+    s += str(state.caps1) if state.caps1 != None else "?"
     s += ":"
-    s += str(state.score2) if state.score2 != None else "?"
+    s += str(state.caps2) if state.caps2 != None else "?"
     s += " "
     s += state.side2 if state.side2 != None else "???"
     s += "\n\n"

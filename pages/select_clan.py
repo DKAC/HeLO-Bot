@@ -2,6 +2,7 @@ import discord, logging, math
 from discord_components.component import Button
 from discord_components.interaction import Interaction
 from data import *
+from database_models import Clans
 from object_models import *
 from pages.new_match import match_description
 
@@ -19,12 +20,12 @@ async def select_clan(state, cmd : SimpleNamespace):
     logging.info(f"{input}")
 
     if input.selected == None: # select all clans to start with
-        selected = clan_list
+        selected = Clans.get()
     else:
         selected = input.selected
 
     if selected != None and len(selected) == 1 and input.from_search == False: # single clan selected                
-        return Return.cmd(state, { "selected": selected[0], "is_showing_coop": input.is_showing_coop, "next_step": "RETURN" } )
+        return Return.cmd(state, { "selected": selected[0].id, "is_showing_coop": input.is_showing_coop, "next_step": "RETURN" } )
         
 
     else: # build buttons for ranges / clans
@@ -34,7 +35,7 @@ async def select_clan(state, cmd : SimpleNamespace):
         embed = discord.Embed(title = input.title, description=f"{match_description(state)}**Select a clan**")
         components = []
 
-        selected.sort()               
+        selected.sort(key=lambda clan: clan.tag)               
         state.current.options = [] # building new buttons, discard the old button options
         if len(selected) > 5:
             step = max(5, math.ceil((len(selected)) / 5)) # at least 5 clans per page
@@ -42,18 +43,18 @@ async def select_clan(state, cmd : SimpleNamespace):
                 button_range = selected[i:i+step]
                 if len(button_range) > 1:
                     components.append([
-                        Button(label=f"{button_range[0]} - {button_range[-1]}", custom_id = SelectClan.cmd(state, SelectClanOption(selected = button_range))),
+                        Button(label=f"{button_range[0].tag} - {button_range[-1].tag}", custom_id = SelectClan.cmd(state, SelectClanOption(selected = button_range))),
                     ])
                 else:
-                    components.append([ Button(label = button_range[0], custom_id = SelectClan.cmd(state, SelectClanOption(selected = [button_range[0]], is_showing_coop = True))) ])
+                    components.append([ Button(label = button_range[0].tag, custom_id = SelectClan.cmd(state, SelectClanOption(selected = [button_range[0]], is_showing_coop = True))) ])
                     if input.is_showing_coop: # additional button for coop
-                        components[-1].append(Button(emoji="🚻", custom_id = SelectClan.cmd(state, SelectClanOption(selected = [button_range[0]], is_showing_coop = False))))
+                        components[-1].append(Button(emoji="🚻", custom_id = SelectClan.cmd(state, SelectClanOption(selected = [button_range[0]]))))
 
         else:
             for clan in selected: 
-                components.append([ Button(label = clan, custom_id = SelectClan.cmd(state, SelectClanOption(selected = [clan], is_showing_coop = True))) ])
+                components.append([ Button(label = clan.tag, custom_id = SelectClan.cmd(state, SelectClanOption(selected = [clan], is_showing_coop = True))) ])
                 if input.is_showing_coop: # additional button for coop
-                    components[-1].append(Button(emoji="🚻", custom_id = SelectClan.cmd(state, SelectClanOption(selected = [clan], is_showing_coop = False))))
+                    components[-1].append(Button(emoji="🚻", custom_id = SelectClan.cmd(state, SelectClanOption(selected = [clan]))))
     
     components[-1].append(Button(emoji='◀️', custom_id = SelectClan.cmd(state, SelectClanOption(is_showing_coop = input.is_showing_coop))))
     components[-1].append(Button(emoji='🔼', custom_id = Home.cmd(state)))

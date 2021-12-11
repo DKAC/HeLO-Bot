@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 import discord, logging
+from discord.errors import NotFound
 from discord_components.component import Button
 from discord_components.interaction import Interaction
 from database_models import Auth, Clans
@@ -48,7 +49,10 @@ async def login_perform(state, cmd):
     logging.info(f"show numpad")
     state.current.input = ""
     
-    embed = discord.Embed(title="Login", description="Enter your PIN")
+    title = "Login"
+    if state.current.title != None: title = state.current.title
+    
+    embed = discord.Embed(title=title, description=f"Enter your PIN")
     components = [[
         Button(emoji="1️⃣", custom_id=Login.cmd(1)),
         Button(emoji="2️⃣", custom_id=Login.cmd(2)),   
@@ -76,26 +80,27 @@ async def auth_perform(state, cmd : SimpleNamespace):
     logging.info(f"authenticate user {cmd}")
     response = Auth.post(state)
     
-    if response.status_code == 200:
+    if response != None and response.status_code == 200:
         # read user data
         state.user = SimpleNamespace(**json.loads(response.content))
         # read clan data for the users clan
         if state.user.clan != None: 
-            state.user.clan = Clans.get(state.user.clan) 
+            state.clan = Clans.get(state.user.clan)
             
         await home(state, SimpleNamespace(**{ "action": "HOME" }))
         
     else:
+        state.current.title = "❌    Login failed    ❌"
         await login_perform(state, cmd)
 
 
 async def logout_perform(state, cmd : SimpleNamespace):
     logging.info(f"logout and clear user state")
+    interaction = state.interaction
     state.clear()
-    # todo - what else to be cleared up for logout?
     embed = discord.Embed(title="Done", description="logged out")
     components = [ Button(emoji = '🔑', label = 'Login', custom_id = Login.cmd("LOGIN")) ]
-    await state.interaction.respond(type = 7, content = "", embed = embed, components = components)
+    await interaction.respond(type = 7, content = "", embed = embed, components = components)
 
 
 async def help_perform(state, cmd : SimpleNamespace):

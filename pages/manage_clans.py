@@ -1,9 +1,9 @@
 import logging, time
 from discord.embeds import Embed
 from discord_components.component import Button
-from object_models import *
 from database_models import *
 from data import *
+from object_models import *
 from user_state import UserState
 
 
@@ -55,7 +55,7 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
         if state.current.next_step == None: # first step: search for CLAN
             logging.info(f"CLAN: {result.selected}")    
             for clan in clans:
-                if clan.tag == result.selected:
+                if clan.id == result.selected:
                     state.current.clan = clan
                     state.current.next_step = EditClan.name
         
@@ -68,7 +68,7 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
         
         elif result.field == "SELECT_TAG":
             if result.input.lower() in [clan.tag.lower() for clan in clans]:
-                error = "***Invalid input: clan with tag '{result.input}' already exists"
+                error = "***Invalid input: clan with tag '{result.input}' already exists***"
             else:
                 state.current.clan.tag = result.input
             
@@ -85,7 +85,7 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
                 error = "***Invalid input: discord invites have the form 'https://discord.gg/??????????'***"
 
     if state.current.next_step == None: # first step: search for CLAN
-        return SearchClan.cmd(state, option = SearchClanOption(title = state.current.title, is_showing_coop = False))
+        return SearchClan.cmd(state, option = SearchClanOption(title = state.current.title))
 
     if state.current.next_step == "DONE":
         return ManageClans.cmd(state)
@@ -98,7 +98,7 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
     ])
     if error != None: description += f"\n\n{error}"
             
-    embed = Embed(title = "Edit Clan", description = description)
+    embed = Embed(title = state.current.title, description = description)
     components = [
         [
             Button(emoji = "🏷️", label = "tag", custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_TAG", "Enter Clan Tag"))),
@@ -131,19 +131,19 @@ async def delete_clan(state, cmd : SimpleNamespace):
         state.push(DeleteClan(state, cmd.next_step))
     else:
         result = cmd.result if type(cmd.result) == str else SimpleNamespace(**cmd.result)
-
+        
         if state.current.next_step == None: # first step: search for CLAN
-            logging.info(f"CLAN: {result.selected}")    
-            state.current.clan = result.selected            
+            logging.info(f"CLAN: {result}")            
+            state.current.clan = Clans.get(result.selected)
             state.current.next_step = "CONFIRM"
 
         elif state.current.next_step == "CONFIRM":
             logging.info(f"CONFIRM - delete from DB: {state.current.clan}")
-            clan_list.remove(state.current.clan) # todo - delete from database
+            Clans.delete(state, state.current.clan.id)
             state.current.next_step = "DONE"
 
     if state.current.next_step == None: # first step: search for CLAN
-        return SearchClan.cmd(state, option = SearchClanOption( title = "Delete Clan" ))
+        return SearchClan.cmd(state, option = SearchClanOption(title = "Delete Clan"))
 
     if state.current.next_step == "CONFIRM":     
         return DeleteClanConfirm.cmd(state, option = DeleteClanConfirmOption(clan = state.current.clan))
@@ -158,9 +158,6 @@ async def delete_clan_confirm(state, cmd : SimpleNamespace):
     if cmd.result != None:
         return Return.cmd(state, result = { "user": state.userid })
     
-    cmd = state.current.options[cmd.input]
-    logging.info(f"{cmd}")
-
     state.push(DeleteClanConfirm(state.current))
     
     embed = Embed(title = "Confirm clan deletion", description = f"**Are you absolutely sure, this clan should be deleted?**")

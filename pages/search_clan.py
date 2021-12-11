@@ -25,11 +25,11 @@ async def search_clan(state, cmd : SimpleNamespace):
     
 async def search_clan_callback(state, input):    
     logging.info(f"input = {input}")
-    clanSearch = { clan.lower(): clan for clan in clan_list} # build map { "stdb": "StDb", ... }
+    clanSearch = { clan.tag.lower(): clan for clan in Clans.get()} # build map { "stdb": Clan(..."StDb"), ... }
     selected = [clan for clan in clanSearch.keys() if input.lower() in clan] # find by keys: "stdb", ...
-    selected = [clanSearch[clan] for clan in selected] # map from key to value: "stdb" => "StDb"
+    selected = [clanSearch[clan] for clan in selected] # map from key to value: "stdb" => Clan(..."StDb")
     logging.info(f"clans selected: {selected}")
-    selected.sort()
+    selected.sort(key=lambda clan: clan.tag)
     if len(selected) == 0:
         logging.info(f"no clan found with: {input}")
     else:

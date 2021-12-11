@@ -11,7 +11,7 @@ from pages.new_match import match_description
 #############################
 
 def d(days): return date.today() - timedelta(days = days)
-def c(days): return d(days).strftime('%d.%m.%y')
+def c(days): return d(days).isoformat()
 def s(days): return d(days).strftime('%d %b')
 
 async def match_date(state, cmd : SimpleNamespace):
