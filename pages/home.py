@@ -1,11 +1,28 @@
-from datetime import datetime
 import logging
 from types import SimpleNamespace
 import discord
 from discord_components.component import Button
-from database_models import Matches
+from database_models import Match, Matches
 from object_models import *
 
+match_status_emoji = {
+    1: "❓", # not confirmed, show first
+    2: "☑️", # confirmed, show second
+    3: "✅", # released, show third
+    9: "🤼", # otherwise
+}
+
+def is_confirmed(state, clan_id, conf):
+    return clan_id == state.clan.id and conf != None and conf != ""
+
+def is_not_confirmed(state, clan_id, conf):
+    return clan_id == state.clan.id and (conf == None or conf == "")
+
+def match_status(state, match):
+    if not_empty(match.conf1) and not_empty(match.conf2): return 3
+    if is_not_confirmed(state, match.clan1_id, match.conf1) or is_not_confirmed(state, match.clan2_id, match.conf2): return 1
+    if is_confirmed(state, match.clan1_id, match.conf1) or is_confirmed(state, match.clan2_id, match.conf2): return 2
+    return 9
 
 #############################
 # process message from user #
@@ -20,34 +37,51 @@ async def home(state, cmd : SimpleNamespace):
     description = "\n".join([
         f"User: {state.user.name} ({state.user.role})",
         f"Clan: {state.clan.flag} {state.clan.tag}" if state.clan != None else None,
+        f"",
+        f"**__Legend__**",
+        f"{match_status_emoji[1]} waiting for confirmation",
+        f"{match_status_emoji[2]} waiting for opponent confirmation",
+        f"{match_status_emoji[3]} confirmed by both parties (or admin)",
     ])
 
     # build match buttons
-    matches = Matches.get(clan1_id=state.clan.id) # todo - what matches to load?
-    matches.sort(lambda m: m.date)
+    matches = Matches.get(clan1_id=state.clan.id)
+    matches.extend(Matches.get(clan2_id=state.clan.id))
+    matches.sort(key=lambda m: f"{match_status(state, m)}|{m.date}") # first, sort by status, then sort by date
     matchButtons = []
-    for m in matches:
+    for match in matches:
         if len(matchButtons) == 5: break
-        matchButtons.append(Button(emoji = "🤼", label = f"{m.date} {m.clan1} vs. {m.clan2}", custom_id = f"MATCH"))
-        # todo - add option for this match
+        # todo - when confirmed or released, do not show match confirmation
+        matchButtons.append(Button(
+            emoji = match_status_emoji[match_status(state, match)], 
+            label = f"{match.date} {match.clan1} vs. {match.clan2}", 
+            custom_id = NewMatch.cmd(state, option = NewMatchOption(next_step="CONFIRM", match=match))
+        ))
 
-    embed = discord.Embed(title="HeLO Screen Dummy", description=description)
+    embed = discord.Embed(title="HeLO - Hell Let Loose ELO", description=description)
+    new_own_match = Match(clan1_id=state.clan.id, clan1=state.clan.tag)
     components = [
         matchButtons,
         [
-            Button(emoji = "🗂️", label = "select clan",
-                   custom_id = SelectClan.cmd(state, option = SelectClanOption(title = "Select Clan"))), 
-            Button(emoji = "🔎", label = "search clan",
-                   custom_id = SearchClan.cmd(state, option = SearchClanOption(title = "Search Clan"))),
-            Button(emoji = "🗄️", label = "manage clans",
-                   custom_id = ManageClans.cmd(state))
-        ], [
             Button(emoji = "🚹", label = "new match",
-                   custom_id = NewMatch.cmd(state, option = NewMatchOption(clan1 = state.clan.id, next_step = "CLAN2"))), 
+                   custom_id = NewMatch.cmd(state, option=NewMatchOption(match=new_own_match, next_step="CLAN2"))), 
             Button(emoji = "🚻", label = "new coop match",
-                   custom_id = NewMatch.cmd(state, option = NewMatchOption(clan1 = state.clan.id, next_step = "COOP1"))), 
+                   custom_id = NewMatch.cmd(state, option=NewMatchOption(match=new_own_match, next_step="COOP1"))),
+            Button(emoji = "🚼", label = "new match (admin)",
+                   custom_id = NewMatch.cmd(state, option=NewMatchOption(match=Match(), next_step="CLAN1"))), 
         ], [
-            Button(emoji = "🔒", label = "logout", custom_id = Login.cmd("LOGOUT"))
+#            Button(emoji = "🗂️", label = "select clan",
+#                   custom_id = SelectClan.cmd(state, option = SelectClanOption(title = "Select Clan"))), 
+#            Button(emoji = "🔎", label = "search clan",
+#                   custom_id = SearchClan.cmd(state, option = SearchClanOption(title = "Search Clan"))),
+            Button(emoji = "🗄️", label = "clans",
+                   custom_id = ManageClans.cmd(state)),
+            Button(emoji = "🗄️", label = "**users**",
+                   custom_id = ManageUsers.cmd(state)),
+            Button(emoji = "🗄️", label = "**events**",
+                   custom_id = ManageEvents.cmd(state)),
+        ], [
+            Button(emoji = "🔒", label = "logout", custom_id = Login.cmd("LOGOUT")),
         ],
     ]
     await state.interaction.respond(type = 7, content = "", embed = embed, components = components)    

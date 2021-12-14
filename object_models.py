@@ -35,6 +35,24 @@ class Home(ObjectState):
         return json.dumps({ "action": Home.name, "input": None, "result": None })
 
         
+class ManageEvents(ObjectState):
+    name = "MANAGE_EVENTS"
+    def __init__(self, state):
+        ObjectState.__init__(self, ManageEvents.name, state)
+
+    def cmd(state) -> str:
+        return json.dumps({ "action": ManageEvents.name, "input": None, "result": None, "callback": None })
+
+        
+class ManageUsers(ObjectState):
+    name = "MANAGE_USERS"
+    def __init__(self, state):
+        ObjectState.__init__(self, ManageUsers.name, state)
+
+    def cmd(state) -> str:
+        return json.dumps({ "action": ManageUsers.name, "input": None, "result": None, "callback": None })
+
+        
 class ManageClans(ObjectState):
     name = "MANAGE_CLANS"
     def __init__(self, state):
@@ -174,9 +192,10 @@ class InputFromMessage(ObjectState):
 
 
 class NewMatchOption:
-    def __init__(self, clan1 = None, next_step = None, title = ""):
-        self.clan1 = clan1
+    def __init__(self, clan1_id = None, next_step = None, match = None, title = ""):
+        self.clan1_id = clan1_id
         self.next_step = next_step
+        self.match = match
         self.title = title
 
     def __repr__(self): return json.dumps(self.__dict__)
@@ -184,29 +203,11 @@ class NewMatchOption:
 
 class NewMatch(ObjectState):
     name = "NEW_MATCH"
-    def __init__(self, state, clan1 = None, clan1_id = None, next_step = None): 
+    def __init__(self, state, next_step = None, match = None): 
         ObjectState.__init__(self, NewMatch.name, state)
         self.next_step = next_step
-        self.match_id = None
-        self.clan1 = clan1
-        self.clan1_id = clan1_id
-        self.coop1 = None
-        self.coop1_id = None
-        self.side1 = None
-        self.caps1 = None
-        self.clan2 = None
-        self.clan2_id = None
-        self.coop2 = None
-        self.coop2_id = None
-        self.side2 = None
-        self.caps2 = None
-        self.date = None
-        self.duration = None
-        self.map = None
-        self.factor = None
-        self.event = None
-        self.conf1 = None
-        self.conf2 = None
+        self.match = match
+
 
     def cmd(state, option = NewMatchOption()) -> str:
         state.current.options.append(option)
@@ -215,14 +216,15 @@ class NewMatch(ObjectState):
 
 class SelectMap():
     name = "SELECT_MAP"
-    def cmd(state, map = None) -> str:
+    def cmd(state, map = None, next_step = None) -> str:
+        if next_step != None: state.current.next_step = next_step
         return json.dumps({ "action": SelectMap.name, "input": None, "result": map })
 
 
 class MatchDate(ObjectState):
     name = "MATCH_DATE"
-    def cmd(state, date = None) -> str:
-        return json.dumps({ "action": MatchDate.name, "input": None, "result": date })
+    def cmd(state, date = None, next_step = None) -> str:
+        return json.dumps({ "action": MatchDate.name, "input": "CONFIRM", "result": date })
 
 
 class MatchResult(ObjectState):
@@ -230,7 +232,8 @@ class MatchResult(ObjectState):
     def __init__(self, state): 
         ObjectState.__init__(self, MatchResult.name, state)
         
-    def cmd(state, caps1 = None, side1 = None) -> str:
+    def cmd(state, caps1 = None, side1 = None, next_step = None) -> str:
+        if next_step != None: state.current.next_step = next_step
         if caps1 == None or side1 == None:
             return json.dumps({ "action": MatchResult.name, "input": None, "result": side1 })    
         else:
@@ -261,28 +264,32 @@ class SelectFlagOption:
 
 
 class MatchConfirmOption:
-    def __init__(self, next_step = None, title = "", clan1 = None, coop1 = None, clan2 = None, coop2 = None, clan1_id = None, coop1_id = None, clan2_id = None, coop2_id = None, side1 = None, side2 = None, caps1 = None, caps2 = None, date = None, duration = None, map = None, factor = None, event = None, conf1 = None, conf2 = None):
+    # def __init__(self, next_step = None, title = "", clan1 = None, coop1 = None, clan2 = None, coop2 = None, clan1_id = None, coop1_id = None, clan2_id = None, coop2_id = None, side1 = None, side2 = None, caps1 = None, caps2 = None, date = None, duration = None, map = None, factor = None, event = None, conf1 = None, conf2 = None):
+    #     self.next_step = next_step
+    #     self.title = title
+    #     self.clan1 = clan1
+    #     self.clan1_id = clan1_id
+    #     self.coop1 = coop1
+    #     self.coop1_id = coop1_id
+    #     self.side1 = side1
+    #     self.caps1 = caps1
+    #     self.clan2 = clan2
+    #     self.clan2_id = clan2_id
+    #     self.coop2 = coop2
+    #     self.coop2_id = coop2_id
+    #     self.side2 = side2
+    #     self.score2 = caps2
+    #     self.date = date
+    #     self.duration = duration
+    #     self.map = map
+    #     self.factor = factor
+    #     self.event = event
+    #     self.conf1 = conf1
+    #     self.conf2 = conf2    
+        
+    def __init__(self, next_step = None, title = ""):
         self.next_step = next_step
         self.title = title
-        self.clan1 = clan1
-        self.clan1_id = clan1_id
-        self.coop1 = coop1
-        self.coop1_id = coop1_id
-        self.side1 = side1
-        self.caps1 = caps1
-        self.clan2 = clan2
-        self.clan2_id = clan2_id
-        self.coop2 = coop2
-        self.coop2_id = coop2_id
-        self.side2 = side2
-        self.score2 = caps2
-        self.date = date
-        self.duration = duration
-        self.map = map
-        self.factor = factor
-        self.event = event
-        self.conf1 = conf1
-        self.conf2 = conf2
         
     def __repr__(self): return json.dumps(self.__dict__)
         

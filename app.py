@@ -91,8 +91,6 @@ async def on_message(msg):
                 cmd = await callback(state, msg.content)
                 await perform(state, cmd)
                 
-            return
-
         # waiting for login command
         cmd = parse_cmd(msg.content)
         if cmd.action.upper() == Login.name:             

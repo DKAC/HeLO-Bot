@@ -73,7 +73,11 @@ async def login_perform(state, cmd):
     if type(state.current.interaction) == Interaction:
         await state.current.respond(embed = embed, components = components)
     else:
-        await state.current.message.channel.send(embed = embed, components = components)
+        if state.current.message != None:
+            await state.current.message.channel.send(embed = embed, components = components)
+        else:
+            # todo - send message by user id
+            logging.warning("TODO")
         
 
 async def auth_perform(state, cmd : SimpleNamespace):

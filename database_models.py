@@ -211,19 +211,19 @@ class Match():
             self.match_id : str = jMatch["match_id"]
             self.clan1_id : str = jMatch["clan1_id"]
             self.clan1    : str = jMatch["clan1"]
-            self.coop1_id : str = jMatch["coop1_id"]
-            self.coop1    : str = jMatch["coop1"]
-            self.clan2_id : str = jMatch["clan2_id"]
-            self.clan2    : str = jMatch["clan2"]
-            self.coop2_id : str = jMatch["coop2_id"]
-            self.coop2    : str = jMatch["coop2"]
+            self.coop1_id : str = jMatch["coop1_id"] if "coop1_id" in jMatch else ""
+            self.coop1    : str = jMatch["coop1"]    if "coop1"    in jMatch else ""
+            self.clan2_id : str = jMatch["clan2_id"] 
+            self.clan2    : str = jMatch["clan2"] 
+            self.coop2_id : str = jMatch["coop2_id"] if "coop2_id" in jMatch else ""
+            self.coop2    : str = jMatch["coop2"]    if "coop2"    in jMatch else ""
             self.side1    : str = jMatch["side1"]
             self.side2    : str = jMatch["side2"]
             self.caps1    : int = jMatch["caps1"]
             self.caps2    : int = jMatch["caps2"]
             self.map      : str = jMatch["map"]
             self.date     : str = datetime.fromtimestamp(jMatch["date"]["$date"]/1000).strftime("%Y-%m-%d")           
-            self.duration : int = jMatch["duration"]
+            self.duration : int = jMatch["duration"] if "duration" in jMatch else 90
             self.factor   : float = jMatch["factor"] if "factor" in jMatch else 0
             self.event    : str = jMatch["event"] if "event" in jMatch else ""
             self.conf1    : str = jMatch["conf1"] if "conf1" in jMatch else ""
@@ -265,7 +265,7 @@ class Match():
 
 class Matches():
     
-    def get(id = None, clan1_id = None):
+    def get(id = None, clan1_id = None, clan2_id = None):
         logging.info(f"Matches GET")
         if id != None:
             response = requests.get(f"{heloUrl}/match/{id}")
@@ -273,8 +273,11 @@ class Matches():
             match = Match(jMatch = jClan) # build object from json
             return match
         else:
-            clan_args = f"?clan1_id={clan1_id}"
-            response = requests.get(f"{heloUrl}/matches")
+            clan_args = []
+            if clan1_id != None: clan_args.append(f"clan1_id={clan1_id}")
+            if clan2_id != None: clan_args.append(f"clan2_id={clan2_id}")
+            url_param = f'?{"&".join(clan_args)}' if len(clan_args) > 0 else ""
+            response = requests.get(f"{heloUrl}/matches{url_param}")
             jMatches = json.loads(response.content) # get data from REST service
             matches = [Match(jMatch = jMatch) for jMatch in jMatches] # build objects from json
             return matches
