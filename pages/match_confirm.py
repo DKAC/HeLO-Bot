@@ -35,7 +35,7 @@ async def match_confirm(state, cmd : SimpleNamespace):
             if "duration" in cmd.result:
                 state.parent.match.duration = cmd.result.duration
             if "map" in cmd.result:
-                state.parent.match.map = cmd.result.map
+                state.parent.match.map = cmd.result["map"]
         except:
             logging.info("?")
     
