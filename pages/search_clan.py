@@ -12,6 +12,7 @@ async def search_clan(state, cmd : SimpleNamespace):
     logging.info(f"{cmd}")
 
     if cmd.result != None:
+        cmd.result["option_step"] = state.current.options[0].next_step
         return Return.cmd(state, cmd.result)
     
     input = state.current.options[cmd.input]
@@ -20,7 +21,10 @@ async def search_clan(state, cmd : SimpleNamespace):
     state.current.options = [input]
     
     embed = discord.Embed(title = input.title, description = f"{match_description(state)}**Enter clan search text below:**")
-    await state.interaction.respond(type = 7, content = "", embed = embed, components = [])
+    components = [
+        Button(emoji='🔼', custom_id = Home.cmd(state)),
+    ]
+    await state.interaction.respond(type = 7, content = "", embed = embed, components = components)
     
     
 async def search_clan_callback(state, input):    
