@@ -3,7 +3,7 @@ from datetime import date, timedelta
 from discord.embeds import Embed
 from discord_components.component import Button
 from object_models import *
-from pages.new_match import match_description
+from messages.match_message import match_description
 
 
 #############################

@@ -3,9 +3,8 @@ import json, requests, os
 from types import SimpleNamespace
 import logging
 from requests.models import Response
+from env import *
 
-
-heloUrl = os.environ.get("HELO_URL")
    
 
 ########

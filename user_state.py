@@ -72,7 +72,7 @@ class UserState():
         
 
     def find(self, state_type) -> ObjectState:
-        for i in reversed(range(len(self.stack) - 1)):
+        for i in reversed(range(len(self.stack))):
             if type(self.stack[i]) == state_type:
                 return self.stack[i]
 

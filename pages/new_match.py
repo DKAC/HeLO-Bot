@@ -1,8 +1,10 @@
 import logging
+
 from database_models import Clans, Matches, Match
+from messages.match_message import *
 from pages.select_clan import *
 from object_models import *
-
+from env import *
 
 #############################
 # process message from user #
@@ -84,6 +86,10 @@ async def new_match(state, cmd : SimpleNamespace):
                 match.match_id = match_id
                 Matches.create(state, match)
 
+            logging.info(f"create/update discord message")
+            if not_empty(match.conf1) and not_empty(match.conf2):
+                await MatchMessage.send(state)
+
             state.current.next_step = "DONE"
             
     if state.current.next_step == "CLAN1": 
@@ -114,45 +120,3 @@ async def new_match(state, cmd : SimpleNamespace):
         return Home.cmd(state)
 
 
-def match_description(state):
-    new_match = state.find(NewMatch)
-    if new_match == None: return ""
-    
-    match = new_match.match
-    
-    clans = Clans.get()
-    
-    # todo store id instead of tag
-    dummy = Clan("dummy", tag = "???")
-    clan1 = [clan for clan in clans if clan.id == match.clan1_id][0] if match.clan1 != None and match.clan1 != "" else dummy
-    coop1 = [clan for clan in clans if clan.id == match.coop1_id][0] if match.coop1 != None and match.coop1 != "" else dummy
-    clan2 = [clan for clan in clans if clan.id == match.clan2_id][0] if match.clan2 != None and match.clan2 != "" else dummy
-    coop2 = [clan for clan in clans if clan.id == match.coop2_id][0] if match.coop2 != None and match.coop2 != "" else dummy
-    
-    s = "**Edit Match**" if not_empty(match.match_id) else "**New Match**"
-    s += "\n"
-    s += f"{clan1.flag} "   if not_empty(clan1.flag)  else ""
-    s += f"{clan1.tag}"
-    s += " & "              if not_empty(match.coop1) else ""
-    s += f"{coop1.flag} "   if not_empty(coop1.flag)  else ""
-    s += f"{coop1.tag}"     if not_empty(match.coop1) else ""
-    s += " vs. "
-    s += f"{clan2.flag} "   if not_empty(clan2.flag)  else ""
-    s += f"{clan2.tag}"
-    s += " & "              if not_empty(match.coop2) else ""
-    s += f"{coop2.flag} "   if not_empty(coop2.flag)  else ""
-    s += f"{coop2.tag}"     if not_empty(match.coop2) else ""
-    s += "\n"
-    s += match.date if match.date != None else "???"
-    s += "\n"
-    s += match.map if not_empty(match.map) else "???"
-    s += "\n"
-    s += match.side1 if not_empty(match.side1) else "???"
-    s += " "
-    s += str(match.caps1) if match.caps1 != None else "?"
-    s += ":"
-    s += str(match.caps2) if match.caps2 != None else "?"
-    s += " "
-    s += match.side2 if not_empty(match.side2) else "???"
-    s += "\n\n"
-    return s

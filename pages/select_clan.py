@@ -4,7 +4,7 @@ from discord_components.interaction import Interaction
 from data import *
 from database_models import Clans
 from object_models import *
-from pages.new_match import match_description
+from messages.match_message import match_description
 
 #############################
 # process message from user #

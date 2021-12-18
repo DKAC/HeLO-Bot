@@ -1,5 +1,4 @@
-import discord, logging, os, pytz
-from discord_components import DiscordComponents
+import discord, logging
 from pages.login import *
 from pages.home import *
 from pages.select_clan import *
@@ -14,21 +13,7 @@ from user_state import *
 from pages.match_confirm import *
 from pages.input_from_message import *
 from routing import *
-
-
-#################
-# vars and init #
-#################
-
-discord_token = os.environ.get("DISCORD_TOKEN")
-tz = pytz.timezone("Europe/Berlin")
-
-logging.basicConfig(encoding='utf-8', level=logging.INFO, format=f"%(filename)20s:%(lineno)-3s - %(funcName)-30s %(message)s")
-logging.getLogger("discord").setLevel(logging.ERROR)
-
-discordClient = discord.Client()
-DiscordComponents(discordClient)
-
+from env import *
 
 ########################
 # commands and actions #
