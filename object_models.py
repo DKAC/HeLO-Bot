@@ -2,7 +2,7 @@ import json
 import logging
 from types import SimpleNamespace
 from object_state import *
-from database_models import Clan
+from database_models import Clan, Match
 
 
 #########################################################################################
@@ -192,7 +192,7 @@ class InputFromMessage(ObjectState):
 
 
 class NewMatchOption:
-    def __init__(self, clan1_id = None, next_step = None, match = None, title = ""):
+    def __init__(self, clan1_id = None, next_step = None, match : Match = None, title = ""):
         self.clan1_id = clan1_id
         self.next_step = next_step
         self.match = match
@@ -214,17 +214,52 @@ class NewMatch(ObjectState):
         return json.dumps({ "action": NewMatch.name, "input": state.current.last_option(), "result": None })
 
 
-class SelectMap():
+class SelectMap(ObjectState):
     name = "SELECT_MAP"
+    def __init__(self, state): 
+        ObjectState.__init__(self, SelectMap.name, state)
+
     def cmd(state, map = None, next_step = None) -> str:
         if next_step != None: state.current.next_step = next_step
         return json.dumps({ "action": SelectMap.name, "input": None, "result": map })
 
 
+class SelectEvent(ObjectState):
+    name = "SELECT_EVENT"
+    def __init__(self, state): 
+        ObjectState.__init__(self, SelectEvent.name, state)
+
+    def cmd(state, event = None, next_step = None) -> str:
+        if next_step != None: state.current.next_step = next_step
+        return json.dumps({ "action": SelectEvent.name, "input": None, "result": event })
+
+
 class MatchDate(ObjectState):
     name = "MATCH_DATE"
+    def __init__(self, state): 
+        ObjectState.__init__(self, MatchDate.name, state)
+
     def cmd(state, date = None, next_step = None) -> str:
         return json.dumps({ "action": MatchDate.name, "input": "CONFIRM", "result": date })
+
+
+class MatchDuration(ObjectState):
+    name = "MATCH_DURATION"
+    def __init__(self, state): 
+        ObjectState.__init__(self, MatchDuration.name, state)
+
+    def cmd(state, duration = None, next_step = None) -> str:
+        return json.dumps({ "action": MatchDuration.name, "input": "CONFIRM", "result": duration })
+
+
+class MatchPlayers(ObjectState):
+    name = "MATCH_PLAYERS"
+    def __init__(self, state): 
+        ObjectState.__init__(self, MatchPlayers.name, state)
+
+    def cmd(state, players = None, next_step = None) -> str:
+        return json.dumps({ "action": MatchPlayers.name, "input": "CONFIRM", "result": players })
+
 
 
 class MatchResult(ObjectState):
@@ -263,30 +298,7 @@ class SelectFlagOption:
         self.field = field
 
 
-class MatchConfirmOption:
-    # def __init__(self, next_step = None, title = "", clan1 = None, coop1 = None, clan2 = None, coop2 = None, clan1_id = None, coop1_id = None, clan2_id = None, coop2_id = None, side1 = None, side2 = None, caps1 = None, caps2 = None, date = None, duration = None, map = None, factor = None, event = None, conf1 = None, conf2 = None):
-    #     self.next_step = next_step
-    #     self.title = title
-    #     self.clan1 = clan1
-    #     self.clan1_id = clan1_id
-    #     self.coop1 = coop1
-    #     self.coop1_id = coop1_id
-    #     self.side1 = side1
-    #     self.caps1 = caps1
-    #     self.clan2 = clan2
-    #     self.clan2_id = clan2_id
-    #     self.coop2 = coop2
-    #     self.coop2_id = coop2_id
-    #     self.side2 = side2
-    #     self.score2 = caps2
-    #     self.date = date
-    #     self.duration = duration
-    #     self.map = map
-    #     self.factor = factor
-    #     self.event = event
-    #     self.conf1 = conf1
-    #     self.conf2 = conf2    
-        
+class MatchConfirmOption:     
     def __init__(self, next_step = None, title = ""):
         self.next_step = next_step
         self.title = title

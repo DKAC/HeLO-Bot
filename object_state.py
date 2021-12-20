@@ -9,6 +9,7 @@ from discord.errors import NotFound
 
 
 def not_empty(s): return s != None and s != ""
+def empty(s): return s == None or s == ""
 
 
 class ObjectState():

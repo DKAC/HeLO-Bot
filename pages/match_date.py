@@ -15,12 +15,12 @@ def c(days): return d(days).isoformat()
 def s(days): return d(days).strftime('%d %b')
 
 async def match_date(state, cmd : SimpleNamespace):
-    logging.info(f"match_date_process_message: {cmd}")    
+    logging.info(f"{cmd}")    
     
     if cmd.result != None:
         return Return.cmd(state, result = { "date": cmd.result })    
     
-    state.push(MatchResult(state.current))
+    state.push(MatchDate(state.current))
     
     embed = Embed(title = "Match date", description = f"{match_description(state)}**Select match date**")
     

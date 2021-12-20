@@ -204,7 +204,7 @@ class Events():
 
 class Match():
     
-    def __init__(self, id = None, match_id = None, clan1_id = None, clan1 = None, coop1_id = None, coop1 = None, clan2_id = None, clan2 = None, coop2_id = None, coop2 = None, side1 = None, side2 = None, caps1 = None, caps2 = None, map = None, date = None, duration = None, factor = None, event = None, conf1 = None, conf2 = None, jMatch = None):
+    def __init__(self, id = None, match_id = None, clan1_id = None, clan1 = None, coop1_id = None, coop1 = None, clan2_id = None, clan2 = None, coop2_id = None, coop2 = None, side1 = None, side2 = None, caps1 = None, caps2 = None, players = None, map = None, date = None, duration = None, factor = None, event = None, conf1 = None, conf2 = None, jMatch = None):
         if jMatch != None:
             self.id       : str = jMatch["_id"]["$oid"]
             self.match_id : str = jMatch["match_id"]
@@ -220,6 +220,7 @@ class Match():
             self.side2    : str = jMatch["side2"]
             self.caps1    : int = jMatch["caps1"]
             self.caps2    : int = jMatch["caps2"]
+            self.players  : int = jMatch["players"] if "players" in jMatch else 50
             self.map      : str = jMatch["map"]
             self.date     : str = datetime.fromtimestamp(jMatch["date"]["$date"]/1000).strftime("%Y-%m-%d")           
             self.duration : int = jMatch["duration"] if "duration" in jMatch else 90
@@ -242,6 +243,7 @@ class Match():
             self.side2    : str = side2   
             self.caps1    : int = caps1   
             self.caps2    : int = caps2   
+            self.players  : int = players
             self.map      : str = map     
             self.date     : str = date    
             self.duration : int = duration
@@ -255,7 +257,7 @@ class Match():
         "clan1_id": self.clan1_id, "clan1": self.clan1, "coop1_id": self.coop1_id, "coop1": self.coop1, 
         "clan2_id": self.clan2_id, "clan2": self.clan2, "coop2_id": self.coop2_id, "coop2": self.coop2, 
         "side1": self.side1, "side2": self.side2, "caps1": self.caps1, "caps2": self.caps2, "map": self.map, 
-        "date": self.date, "duration": self.duration, "factor": self.factor, "event": self.event, 
+        "players": self.players, "date": self.date, "duration": self.duration, "factor": self.factor, "event": self.event, 
         "conf1": self.conf1, "conf2": self.conf2,
     })
     

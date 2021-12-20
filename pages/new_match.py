@@ -51,8 +51,23 @@ async def new_match(state, cmd : SimpleNamespace):
             match.caps2 = 5 - result.caps1
             match.side1 = result.side1
             match.side2 = "Axis" if result.side1 == "Allies" else "Allies"
-            state.current.next_step = "DATE"
+            state.current.next_step = "DURATION"
 
+        elif state.current.next_step == "DURATION":
+            logging.info(f"DURATION: {result.duration}")
+            match.duration = result.duration
+            state.current.next_step = "PLAYERS"
+            
+        elif state.current.next_step == "PLAYERS":
+            logging.info(f"PLAYERS: {result.players}")
+            match.players = result.players
+            state.current.next_step = "EVENT"
+            
+        elif state.current.next_step == "EVENT":
+            logging.info(f"EVENT: {result.event}")
+            match.event = result.event
+            state.current.next_step = "DATE"
+            
         elif state.current.next_step == "DATE":
             logging.info(f"DATE: {result.date}")
             match.date = result.date
@@ -64,13 +79,10 @@ async def new_match(state, cmd : SimpleNamespace):
             state.current.next_step = "CONFIRM"
             
         elif state.current.next_step == "CONFIRM":
-            logging.info(f"CONFIRM")            
-            if match.clan1_id == state.clan.id: state.current.match.conf1 = state.user.userid
-            if match.clan2_id == state.clan.id: state.current.match.conf2 = state.user.userid
+            logging.info(f"CONFIRM")
+            if "conf1" in cmd.result: match.conf1 = cmd.result["conf1"]
+            if "conf2" in cmd.result: match.conf2 = cmd.result["conf2"]
                 
-            # todo - remove this, when everything is complete
-            state.current.match.duration = "90"
-
             match_id = Match.get_match_id(date=match.date, clan1=match.clan1, clan2=match.clan2)
             if match.match_id != None:
                 if match.match_id == match_id:
@@ -86,9 +98,8 @@ async def new_match(state, cmd : SimpleNamespace):
                 match.match_id = match_id
                 Matches.create(state, match)
 
-            logging.info(f"create/update discord message")
-            if not_empty(match.conf1) and not_empty(match.conf2):
-                await MatchMessage.send(state)
+            logging.info(f"create/update discord message: {match.conf1}, {match.conf2}")
+            await MatchMessage.send(state)
 
             state.current.next_step = "DONE"
             
@@ -106,6 +117,15 @@ async def new_match(state, cmd : SimpleNamespace):
     
     if state.current.next_step == "RESULT": 
         return MatchResult.cmd(state)
+    
+    if state.current.next_step == "DURATION": 
+        return MatchDuration.cmd(state)
+    
+    if state.current.next_step == "PLAYERS": 
+        return MatchPlayers.cmd(state)
+    
+    if state.current.next_step == "EVENT": 
+        return SelectEvent.cmd(state)
     
     if state.current.next_step == "DATE": 
         return MatchDate.cmd(state)

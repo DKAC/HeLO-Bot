@@ -4,17 +4,30 @@ from discord_components.component import Button
 from database_models import Clans, Matches
 from object_models import *
 from messages.match_message import match_description
+from data import *
+from user_state import UserState
 
 
 #############################
 # process message from user #
 #############################
 
-async def match_confirm(state, cmd : SimpleNamespace):
+async def match_confirm(state : UserState, cmd : SimpleNamespace):
     logging.info(f"{cmd}")
     
     if cmd.result == "CONFIRM":
-        return Return.cmd(state, result = { "conf1": state.userid })
+        if state.parent.match.clan1_id == state.clan.id:
+            return Return.cmd(state, result = { "conf1": state.userid })
+        if state.parent.match.clan2_id == state.clan.id:
+            return Return.cmd(state, result = { "conf2": state.userid })
+    
+    if cmd.result == "CONFIRM_ADMIN":
+        if empty(state.parent.match.conf1) and empty(state.parent.match.conf2):
+            return Return.cmd(state, result = { "conf1": state.userid, "conf2": state.userid })
+        if empty(state.parent.match.conf1):
+            return Return.cmd(state, result = { "conf1": state.userid })
+        if empty(state.parent.match.conf2):
+            return Return.cmd(state, result = { "conf2": state.userid })
     
     elif cmd.result == "DELETE":
         logging.info(f"delete from datebase: {state.parent.match.match_id}")
@@ -24,39 +37,51 @@ async def match_confirm(state, cmd : SimpleNamespace):
     elif cmd.result != None:
         # check if match has been edited
         try:
+            match : Match = state.parent.match
             if "date" in cmd.result: 
-                state.parent.match.date = cmd.result["date"]
+                match.date = cmd.result["date"]
             if "caps1" in cmd.result: 
-                state.parent.match.caps1 = cmd.result["caps1"]
-                state.parent.match.caps2 = 5 - cmd.result["caps1"]
+                match.caps1 = cmd.result["caps1"]
+                match.caps2 = 5 - cmd.result["caps1"]
+                if match.caps1 == 0 or match.caps2 == 0: match.duration = 90
             if "side1" in cmd.result:
-                state.parent.match.side1 = cmd.result.side1
-                state.parent.match.side2 = "Axis" if cmd.result.side1 == "Allies" else "Allies"
+                match.side1 = cmd.result.side1
+                match.side2 = "Axis" if cmd.result.side1 == "Allies" else "Allies"
             if "duration" in cmd.result:
-                state.parent.match.duration = cmd.result.duration
+                match.duration = cmd.result["duration"]
             if "map" in cmd.result:
-                state.parent.match.map = cmd.result["map"]
+                match.map = cmd.result["map"]
+            if "players" in cmd.result:
+                match.players = cmd.result["players"]
+            if "event" in cmd.result:
+                match.event = cmd.result["event"]
+                event = [event for event in events if event.tag == match.event]
+                match.factor = event[0]["factor"] if len(event) > 0 else None
             if "selected" in cmd.result and "option_step" in cmd.result:
                 if cmd.result["option_step"] == "CLAN1":
-                    state.parent.match.clan1_id = cmd.result["selected"]
-                    state.parent.match.clan1 = Clans.get(cmd.result["selected"]).tag
+                    match.clan1_id = cmd.result["selected"]
+                    match.clan1 = Clans.get(cmd.result["selected"]).tag
                 elif cmd.result["option_step"] == "COOP1":
-                    state.parent.match.coop1_id = cmd.result["selected"]
-                    state.parent.match.coop1 = Clans.get(cmd.result["selected"]).tag
+                    match.coop1_id = cmd.result["selected"]
+                    match.coop1 = Clans.get(cmd.result["selected"]).tag
                 elif cmd.result["option_step"] == "CLAN2":
-                    state.parent.match.clan2_id = cmd.result["selected"]
-                    state.parent.match.clan2 = Clans.get(cmd.result["selected"]).tag
+                    match.clan2_id = cmd.result["selected"]
+                    match.clan2 = Clans.get(cmd.result["selected"]).tag
                 elif cmd.result["option_step"] == "COOP2":
-                    state.parent.match.coop2_id = cmd.result["selected"]
-                    state.parent.match.coop2 = Clans.get(cmd.result["selected"]).tag
+                    match.coop2_id = cmd.result["selected"]
+                    match.coop2 = Clans.get(cmd.result["selected"]).tag
         except:
             logging.info("?")
     
     if cmd.input != None:
-        opt = state.current.options[cmd.input]
-        logging.info(f"{opt}")
-        logging.info(f"{state.current.match.match_id}")
-        state.push(MatchConfirm(state.current))
+        try:
+            opt = state.current.options[cmd.input]
+            logging.info(f"{opt}")
+            logging.info(f"{state.current.match.match_id}")
+            state.push(MatchConfirm(state.current))
+        except:
+            logging.info(f"No need to push another MatchConfirm")
+            state.current.interaction = state.interaction
     else:
         state.current.interaction = state.interaction
     
@@ -70,14 +95,19 @@ async def match_confirm(state, cmd : SimpleNamespace):
             Button(emoji='🚹', custom_id = SearchClan.cmd(state, SearchClanOption(title = "Change 2. Clan", next_step = "CLAN2"))),
             Button(emoji='🚻', custom_id = SearchClan.cmd(state, SearchClanOption(title = "Change 2. Coop", next_step = "COOP2"))),
         ], [
+            Button(emoji='🎖️', custom_id = SelectEvent.cmd(state, next_step="CONFIRM")),
             Button(emoji='🗓️', custom_id = MatchDate.cmd(state, next_step="CONFIRM")),
+            Button(emoji='🗺️', custom_id = SelectMap.cmd(state, next_step="CONFIRM")),
+        ], [
             Button(emoji='5️⃣', custom_id = MatchResult.cmd(state, next_step="CONFIRM")),
-            Button(emoji='⏱️', custom_id = "--"),#MatchDuration.cmd(state)),
-            Button(emoji='🗺️', custom_id = SelectMap.cmd(state, next_step="CONFIRM"))
+            Button(emoji='⏱️', custom_id = MatchDuration.cmd(state, next_step="CONFIRM") 
+                   if state.parent.match.caps1 != 0 and state.parent.match.caps2 != 0 else MatchConfirm.cmd(state)),
+            Button(emoji='👨‍👨‍👦‍👦', custom_id = MatchPlayers.cmd(state, next_step="CONFIRM")),
         ], [
             Button(emoji='🆗', custom_id = MatchConfirm.cmd(state, confirm = "CONFIRM" )),
+            Button(emoji='🅾️', custom_id = MatchConfirm.cmd(state, confirm = "CONFIRM_ADMIN" )),
             Button(emoji='🗑️', custom_id = MatchConfirm.cmd(state, confirm = "DELETE" )),
-            Button(emoji='🔼', custom_id = Home.cmd(state))
+            Button(emoji='🔼', custom_id = Home.cmd(state)),
         ]
     ]
     

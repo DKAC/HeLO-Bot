@@ -5,6 +5,7 @@ from object_models import NewMatch
 from object_state import not_empty
 from user_state import UserState
 from env import *
+from data import *
 
 class MatchMessage:
     
@@ -17,17 +18,23 @@ class MatchMessage:
         
         after_date = datetime.datetime.utcnow()-datetime.timedelta(days=14)
         messages = await channel.history(after=after_date).flatten()
-        match = get_match(state)
+        match : Match = get_match(state)
         if match != None:
             for m in messages:
                 if len(m.embeds) > 0:
-                    if m.embeds[0].footer != None:                    
-                        if m.embeds[0].footer.text == get_match(state).match_id:
-                            await m.edit(embed=embed)                            
-                            logging.info(f"edit message: {m.id}")
+                    if m.embeds[0].footer != None:         
+                        match : Match = get_match(state)           
+                        if m.embeds[0].footer.text == match.match_id:
+                            await m.edit(embed=embed)
+                            logging.info(f"edited message: {m.id}")
+                            if not_empty(match.conf1): await m.add_reaction(emoji_side[match.side1])
+                            if not_empty(match.conf2): await m.add_reaction(emoji_side[match.side2])
                             return
         
-        await channel.send(embed=embed)
+        m = await channel.send(embed=embed)
+        logging.info(f"added message: {m.id}")
+        if not_empty(match.conf1): await m.add_reaction(emoji_side[match.side1])
+        if not_empty(match.conf2): await m.add_reaction(emoji_side[match.side2])
 
 
 def get_match(state):
@@ -39,7 +46,7 @@ def match_title(state):
     match = get_match(state)
     if match == None: return ""
     
-    title = f"{match.date} {match.clan1}"
+    title = f"{datetime.datetime.fromisoformat(match.date).strftime('%b %d')} - {match.clan1}"
     if not_empty(match.coop1): title += f" {match.coop1}"
     title += f" vs. {match.clan2}"
     if not_empty(match.coop1): title += f" {match.coop2}"
@@ -59,7 +66,10 @@ def match_description(state):
     clan2 = [clan for clan in clans if clan.id == match.clan2_id][0] if match.clan2 != None and match.clan2 != "" else dummy
     coop2 = [clan for clan in clans if clan.id == match.coop2_id][0] if match.coop2 != None and match.coop2 != "" else dummy
     
-    s = ""
+    event = [event for event in events if event["tag"] == match.event]    
+    map = [map for map in maps if map["tag"] == match.map]    
+    
+    s = f"{event[0]['emoji']} **{event[0]['name']}** {event[0]['emoji']}\n" if len(event) > 0 and not_empty(event[0]) else ""
     s += f"{clan1.flag} "   if not_empty(clan1.flag)  else ""
     s += f"{clan1.tag}"
     s += " & "              if not_empty(match.coop1) else ""
@@ -74,7 +84,9 @@ def match_description(state):
     s += "\n"
     s += f":calendar_spiral: {match.date}" if match.date != None else "???"
     s += "\n"
-    s += f":map: {match.map}" if not_empty(match.map) else "???"
+    s += f"👨‍👨‍👦‍👦 {match.players} vs. {match.players}" if not_empty(match.players) else "???"
+    s += "\n"
+    s += f":map: {map[0]['name']}" if len(map) > 0 and not_empty(map[0]) else "???"
     s += "\n"
     s += emoji_side[match.side1] if not_empty(match.side1) else "???"
     s += "  "
@@ -83,6 +95,7 @@ def match_description(state):
     s += emoji_number[match.caps2] if match.caps2 != None else "?"
     s += "  "
     s += emoji_side[match.side2] if not_empty(match.side2) else "???"
+    s += f" - :stopwatch: {match.duration} min" if not_empty(match.duration) else " - ??? min"
     s += "\n\n"
     return s    
 

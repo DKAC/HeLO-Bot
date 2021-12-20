@@ -1,4 +1,5 @@
 from discord_components.interaction import Interaction
+from database_models import Clan
 from object_state import ObjectState
 
 #########################################################################
@@ -19,7 +20,7 @@ class UserState():
         self.interaction = None
         self.message = None
         self.user = None
-        self.clan = None
+        self.clan : Clan = None
         self.stack = []
         self.headers = { "Content-Type": "application/json", "Authorization": None }
         user_states[str(userid)] = self

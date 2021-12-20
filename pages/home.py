@@ -6,10 +6,10 @@ from database_models import Match, Matches
 from object_models import *
 
 match_status_emoji = {
-    1: "❓", # not confirmed, show first
+    3: "❓", # not confirmed, show first
     2: "☑️", # confirmed, show second
-    3: "✅", # released, show third
-    9: "🤼", # otherwise
+    1: "✅", # released, show third
+    0: "🤼", # otherwise
 }
 
 def is_confirmed(state, clan_id, conf):
@@ -19,8 +19,8 @@ def is_not_confirmed(state, clan_id, conf):
     return clan_id == state.clan.id and (conf == None or conf == "")
 
 def match_status(state, match):
-    if not_empty(match.conf1) and not_empty(match.conf2): return 3
-    if is_not_confirmed(state, match.clan1_id, match.conf1) or is_not_confirmed(state, match.clan2_id, match.conf2): return 1
+    if not_empty(match.conf1) and not_empty(match.conf2): return 1
+    if is_not_confirmed(state, match.clan1_id, match.conf1) or is_not_confirmed(state, match.clan2_id, match.conf2): return 3
     if is_confirmed(state, match.clan1_id, match.conf1) or is_confirmed(state, match.clan2_id, match.conf2): return 2
     return 9
 
@@ -38,16 +38,16 @@ async def home(state, cmd : SimpleNamespace):
         f"User: {state.user.name} ({state.user.role})",
         f"Clan: {state.clan.flag} {state.clan.tag}" if state.clan != None else None,
         f"",
-        f"**__Legend__**",
-        f"{match_status_emoji[1]} waiting for confirmation",
+        f"**__Legend__** (up to 5 matches)",
+        f"{match_status_emoji[3]} waiting for confirmation",
         f"{match_status_emoji[2]} waiting for opponent confirmation",
-        f"{match_status_emoji[3]} confirmed by both parties (or admin)",
+        f"{match_status_emoji[1]} confirmed by both parties (or admin)",
     ])
 
     # build match buttons
     matches = Matches.get(clan1_id=state.clan.id)
     matches.extend(Matches.get(clan2_id=state.clan.id))
-    matches.sort(key=lambda m: f"{match_status(state, m)}|{m.date}") # first, sort by status, then sort by date
+    matches.sort(key=lambda m: f"{match_status(state, m)}|{m.date}", reverse=True) # first, sort by status, then sort by date
     matchButtons = []
     for match in matches:
         if len(matchButtons) == 5: break

@@ -12,26 +12,26 @@ async def select_map(state, cmd : SimpleNamespace):
     if cmd.result != None:
         return Return.cmd(state, result = { "map": cmd.result })    
     
-    state.push(MatchResult(state.current))
+    state.push(SelectMap(state.current))
     
     embed = Embed(title = "Map", description = f"{match_description(state)}**Select map**")
     
     components = [
         [            
-            Button(label = maps[0], custom_id = SelectMap.cmd( state, map = maps[0] ) ),
-            Button(label = maps[1], custom_id = SelectMap.cmd( state, map = maps[1] ) ),
-            Button(label = maps[2], custom_id = SelectMap.cmd( state, map = maps[2] ) ),
+            Button(label = maps[0]["tag"], custom_id = SelectMap.cmd( state, map = maps[0]["tag"] ) ),
+            Button(label = maps[1]["tag"], custom_id = SelectMap.cmd( state, map = maps[1]["tag"] ) ),
+            Button(label = maps[2]["tag"], custom_id = SelectMap.cmd( state, map = maps[2]["tag"] ) ),
         ], [            
-            Button(label = maps[3], custom_id = SelectMap.cmd( state, map = maps[3] ) ),
-            Button(label = maps[4], custom_id = SelectMap.cmd( state, map = maps[4] ) ),
-            Button(label = maps[5], custom_id = SelectMap.cmd( state, map = maps[5] ) ),
+            Button(label = maps[3]["tag"], custom_id = SelectMap.cmd( state, map = maps[3]["tag"] ) ),
+            Button(label = maps[4]["tag"], custom_id = SelectMap.cmd( state, map = maps[4]["tag"] ) ),
+            Button(label = maps[5]["tag"], custom_id = SelectMap.cmd( state, map = maps[5]["tag"] ) ),
         ], [            
-            Button(label = maps[6], custom_id = SelectMap.cmd( state, map = maps[6] ) ),
-            Button(label = maps[7], custom_id = SelectMap.cmd( state, map = maps[7] ) ),
-            Button(label = maps[8], custom_id = SelectMap.cmd( state, map = maps[8] ) ),
+            Button(label = maps[6]["tag"], custom_id = SelectMap.cmd( state, map = maps[6]["tag"] ) ),
+            Button(label = maps[7]["tag"], custom_id = SelectMap.cmd( state, map = maps[7]["tag"] ) ),
+            Button(label = maps[8]["tag"], custom_id = SelectMap.cmd( state, map = maps[8]["tag"] ) ),
         ], [            
-            Button(label = maps[9], custom_id = SelectMap.cmd( state, map = maps[9] ) ),
-            Button(label = maps[10], custom_id = SelectMap.cmd( state, map = maps[10] ) ),
+            Button(label = maps[9]["tag"], custom_id = SelectMap.cmd( state, map = maps[9]["tag"] ) ),
+            Button(label = maps[10]["tag"], custom_id = SelectMap.cmd( state, map = maps[10]["tag"] ) ),
             Button(emoji='🔼', custom_id = Home.cmd(state))
         ]        
     ]
