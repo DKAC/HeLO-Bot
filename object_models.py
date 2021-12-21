@@ -2,7 +2,7 @@ import json
 import logging
 from types import SimpleNamespace
 from object_state import *
-from database_models import Clan, Match
+from database_models import Clan, Match, User
 from user_state import UserState
 
 
@@ -52,6 +52,73 @@ class ManageUsers(ObjectState):
 
     def cmd(state) -> str:
         return json.dumps({ "action": ManageUsers.name, "input": None, "result": None, "callback": None })
+
+        
+class AddUser(ObjectState):
+    name = "ADD_USER"
+    def __init__(self, state, next_step, title): 
+        ObjectState.__init__(self, AddUser.name, state)
+        self.next_step = next_step
+        self.title = title
+
+    def cmd(state) -> str:
+        return json.dumps({ "action": AddUser.name, "input": None, "result": None, "callback": None })
+
+        
+class EditUserOption:
+    def __init__(self, next_step = None, title = ""):
+        self.next_step = next_step
+        self.title = title
+
+    def __repr__(self): return json.dumps(self.__dict__)
+
+
+class EditUser(ObjectState):
+    name = "EDIT_USER"
+    def __init__(self, state, next_step, title): 
+        ObjectState.__init__(self, EditUser.name, state)
+        self.next_step = next_step        
+        self.title = title
+        self.user : User
+
+    def cmd(state, confirm = None, option = EditUserOption()) -> str:
+        return json.dumps({ "action": EditUser.name, "input": state.current.last_option(), "result": confirm })
+
+
+class DeleteUserOption:
+    def __init__(self, next_step = None, title = ""):
+        self.next_step = next_step
+        self.title = title
+
+    def __repr__(self): return json.dumps(self.__dict__)
+
+
+class DeleteUser(ObjectState):
+    name = "DELETE_USER"
+    def __init__(self, state, next_step): 
+        ObjectState.__init__(self, DeleteUser.name, state)
+        self.next_step = next_step
+
+    def cmd(state, confirm = None, option = DeleteUserOption()) -> str:
+        state.current.options.append(option)
+        return json.dumps({ "action": DeleteUser.name, "input": state.current.last_option(), "result": confirm })
+
+
+class DeleteUserConfirmOption:
+    def __init__(self, user = None):
+        self.user = user
+
+    def __repr__(self): return json.dumps(self.__dict__)
+        
+                
+class DeleteUserConfirm(ObjectState):
+    name = "DELETE_USER_CONFIRM"
+    def __init__(self, state): 
+        ObjectState.__init__(self, DeleteUserConfirm.name, state)
+
+    def cmd(state, confirm = None, option = DeleteUserOption()) -> str:
+        state.current.options.append(option)
+        return json.dumps({ "action": DeleteUserConfirm.name, "input": state.current.last_option(), "result": confirm })
 
         
 class ManageClans(ObjectState):
@@ -180,6 +247,45 @@ class SearchClan(ObjectState):
         return json.dumps({ "action": SearchClan.name, "input": state.current.last_option(), "result": None, "callback": None })
 
 
+class SelectUserOption:
+    def __init__(self, selected = None, next_step = None, from_search = False, title = ""):
+        self.selected = selected
+        self.from_search = from_search
+        self.next_step = next_step
+        self.title = title
+            
+    def __repr__(self):               
+        return json.dumps({ "selected": None if self.selected == None else [s.tag for s in self.selected], "from_search": self.from_search, "next_step": self.next_step, "title": self.title})
+
+      
+class SelectUser(ObjectState):
+    name = "SELECT_USER"
+    def __init__(self, state): 
+        ObjectState.__init__(self, SelectUser.name, state)
+
+    def cmd(state, option = SelectUserOption()) -> str:
+        state.current.options.append(option)
+        return json.dumps({ "action": SelectUser.name, "input": state.current.last_option(), "result": None } )
+
+
+class SearchUserOption:
+    def __init__(self, selected = None, next_step = None, title = ""):
+        self.next_step = next_step
+        self.title = title
+            
+    def __repr__(self): return json.dumps(self.__dict__)
+
+
+class SearchUser(ObjectState):
+    name = "SEARCH_USER"
+    def __init__(self, state):
+        ObjectState.__init__(self, SearchUser.name, state)
+
+    def cmd(state, option = SelectUserOption()) -> str:
+        state.current.options.append(option)
+        return json.dumps({ "action": SearchUser.name, "input": state.current.last_option(), "result": None, "callback": None })
+    
+
 class InputFromMessage(ObjectState):
     name = "INPUT_FROM_MESSAGE"
     def __init__(self, state): 
@@ -223,6 +329,16 @@ class SelectMap(ObjectState):
     def cmd(state, map = None, next_step = None) -> str:
         if next_step != None: state.current.next_step = next_step
         return json.dumps({ "action": SelectMap.name, "input": None, "result": map })
+
+
+class SelectRole(ObjectState):
+    name = "SELECT_ROLE"
+    def __init__(self, state): 
+        ObjectState.__init__(self, SelectRole.name, state)
+
+    def cmd(state, role = None, next_step = None) -> str:
+        if next_step != None: state.current.next_step = next_step
+        return json.dumps({ "action": SelectRole.name, "input": None, "result": role })
 
 
 class SelectEvent(ObjectState):

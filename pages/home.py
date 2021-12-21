@@ -80,7 +80,7 @@ async def home(state : UserState, cmd : SimpleNamespace):
 #                   custom_id = SearchClan.cmd(state, option = SearchClanOption(title = "Search Clan"))),
             Button(emoji = "🗄️", label = "clans",
                    custom_id = ManageClans.cmd(state)),
-            Button(emoji = "🗄️", label = "**users**",
+            Button(emoji = "🗄️", label = "users",
                    custom_id = ManageUsers.cmd(state)),
             Button(emoji = "🗄️", label = "**events**",
                    custom_id = ManageEvents.cmd(state)),

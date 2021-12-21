@@ -17,7 +17,7 @@ class Auth():
             logging.info("-----------------------------------------")
             body = json.dumps({ "userid": state.userid, "pin": state.current.input })     
 
-            Users.get(state, state.userid)
+            Users.get(state.userid)
             response = requests.get(f"{heloUrl}/user/{state.userid}")
             user = SimpleNamespace(**json.loads(response.text))
             if hasattr(user, 'error'): # if user not found, create one
@@ -50,11 +50,11 @@ class User():
     def __init__(self, id = None, userid = None, pin = None, name = None, role = None, clan = None, jUser = None):
         if jUser != None:
             self.id : str = jUser["_id"]["$oid"]
-            self.userid : str = jUser["userid"]
-            self.pin : str = jUser["pin"]
-            self.name : str = jUser["name"]
-            self.role : str = jUser["role"]
-            self.clan : str = jUser["clan"]
+            self.userid : str = jUser["userid"]     if "userid" in jUser else ""
+            self.pin : str = jUser["pin"]           if "pin"    in jUser else ""
+            self.name : str = jUser["name"]         if "name"   in jUser else ""
+            self.role : str = jUser["role"]         if "role"   in jUser else ""
+            self.clan : str = jUser["clan"]         if "clan"   in jUser else ""
         else:
             self.id : str = id
             self.userid : str = userid
@@ -62,21 +62,55 @@ class User():
             self.name : str = name
             self.role : str = role
             self.clan : str = clan
+
+    def __repr__(self): return json.dumps(self.__dict__)
+
+    def to_json(self): return json.loads(json.dumps(self.__dict__)) # copy of dict
     
 class Users():
 
-    def get(self, userid):
+    def get(userid = None, name_like = None):
         try:
-            logging.info(f"Users GET")
-            jUser = json.loads(requests.get(f"{heloUrl}/user/{userid}").content)
-            user = SimpleNamespace(**jUser)
-            if hasattr(user, 'error'): 
-                return None
+            if userid == None:
+                args = f"?name_like={name_like}" if name_like != None else ""
+                response = requests.get(f"{heloUrl}/users{args}")
+                jUsers = json.loads(response.content) # get data from REST service
+                users = [User(jUser = jUser) for jUser in jUsers] # build objects from json
+                return users
             else:
-                return User(jUser = jUser)
+                logging.info(f"Users GET")
+                jUser = json.loads(requests.get(f"{heloUrl}/user/{userid}").content)
+                user = SimpleNamespace(**jUser)
+                if hasattr(user, 'error'): 
+                    return None
+                else:
+                    return User(jUser = jUser)
         except Exception as ex:
             logging.info(f"Error getting user data from DB: {ex}")
 
+    def update(state, user) -> Response:
+        jUser = user.to_json()
+        jUser.pop("id")
+        logging.info(f"User PUT {user.id} {json.dumps(jUser)}")
+        response = requests.put(f"{heloUrl}/user/{user.userid}", json.dumps(jUser), headers = state.headers)
+        logging.info(f"HTTP {response.status_code} {response.text}")
+        return response
+        
+    def create(state, user) -> Response:
+        jUser = user.to_json()        
+        jUser.pop("id")
+        logging.info(f"Users POST {json.dumps(jUser)}")
+        response = requests.post(f"{heloUrl}/users", json.dumps(jUser), headers = state.headers)
+        logging.info(f"HTTP {response.status_code} {response.text}")
+        return response
+        
+    def delete(state, id):
+        logging.info(f"Users DELETE {id}")
+        response = requests.delete(f"{heloUrl}/user/{id}", headers = state.headers)
+        logging.info(f"HTTP {response.status_code} {response.text}")
+        return response
+    
+    
 ########
 # CLAN #
 ########
@@ -99,7 +133,7 @@ class Clan():
     def __repr__(self): return json.dumps(self.__dict__)
 
     def to_json(self): return json.loads(json.dumps(self.__dict__)) # copy of dict
-    
+            
 class Clans():
     
     def get(id = None):

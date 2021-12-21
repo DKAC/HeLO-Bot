@@ -5,8 +5,10 @@ from pages.match_duration import match_duration
 from pages.match_players import match_players
 from pages.select_clan import select_clan
 from pages.search_clan import search_clan, search_clan_callback
+from pages.search_user import search_user, search_user_callback
 from pages.search_match import search_match, search_match_callback
 from pages.manage_clans import manage_clans, edit_clan, delete_clan, delete_clan_confirm
+from pages.manage_users import manage_users, edit_user, delete_user, delete_user_confirm
 from pages.new_match import new_match
 from pages.match_result import match_result
 from pages.match_date import match_date
@@ -15,6 +17,8 @@ from pages.select_map import select_map
 from pages.select_flag import select_flag
 from pages.match_confirm import match_confirm
 from pages.input_from_message import input_from_message, input_from_message_callback
+from pages.select_role import select_role
+from pages.select_user import select_user
 
 actions = { 
     Login.name:             login,
@@ -26,6 +30,13 @@ actions = {
     EditClan.name:          edit_clan,
     DeleteClan.name:        delete_clan,
     DeleteClanConfirm.name: delete_clan_confirm,
+    SelectUser.name:        select_user,
+    SearchUser.name:        search_user,
+    ManageUsers.name:       manage_users,
+    AddUser.name:           edit_user,
+    EditUser.name:          edit_user,
+    DeleteUser.name:        delete_user,
+    DeleteUserConfirm.name: delete_user_confirm,
     NewMatch.name:          new_match,
     SearchMatch.name:       search_match,
     MatchResult.name:       match_result,
@@ -37,6 +48,7 @@ actions = {
     SelectFlag.name:        select_flag,
     MatchConfirm.name:      match_confirm,
     InputFromMessage.name:  input_from_message,
+    SelectRole.name:        select_role,
     Return.name:            Return.process_message
 }
 async def other_action(state, args): 
@@ -45,6 +57,7 @@ async def other_action(state, args):
 
 callbacks = {
     SearchClan.name:        search_clan_callback,
+    SearchUser.name:        search_user_callback,
     SearchMatch.name:       search_match_callback,
     InputFromMessage.name:  input_from_message_callback,
 }
