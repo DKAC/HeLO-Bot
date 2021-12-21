@@ -78,12 +78,11 @@ async def match_confirm(state : UserState, cmd : SimpleNamespace):
             opt = state.current.options[cmd.input]
             logging.info(f"{opt}")
             logging.info(f"{state.current.match.match_id}")
-            state.push(MatchConfirm(state.current))
+            state.push(MatchConfirm(state))
         except:
             logging.info(f"No need to push another MatchConfirm")
-            state.current.interaction = state.interaction
-    else:
-        state.current.interaction = state.interaction
+    
+    state.current.interaction = state.interaction if state.interaction != None else state.parent.interaction
     
     embed = Embed(title = "Match confirmation", description = f"{match_description(state)}**Confirm match (your user id will be added to the match data)**")
     
@@ -111,4 +110,4 @@ async def match_confirm(state : UserState, cmd : SimpleNamespace):
         ]
     ]
     
-    await state.current.respond(embed = embed, components = components)    
+    await state.current.respond(embed = embed, components = components)

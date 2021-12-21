@@ -75,6 +75,7 @@ async def on_message(msg):
                 logging.info(f"callback with input: {msg.content}")
                 cmd = await callback(state, msg.content)
                 await perform(state, cmd)
+                return
                 
         # waiting for login command
         cmd = parse_cmd(msg.content)

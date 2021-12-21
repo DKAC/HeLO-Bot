@@ -28,21 +28,16 @@ class ObjectState():
 
     async def respond(self, content = "", embed = None, components = None):
         try:
-#            if content == "" and embed == None and components == None: 
-            await self.interaction.respond(type = 7, content = content, embed = embed, components = components)
-            # else:
-            #     logging.info(f"{self.interaction.message.id}")
-            #     logging.info(f"{self.interaction.message.channel.id}")
-            #     channel = self.interaction.message.channel
-            #     await self.interaction.message.delete()
-            #     await channel.send(content = content + ".", embed = embed, components = components)
+            if content == "" and embed == None and components == None:
+                await self.interaction.respond(type = 7, content = content, embed = embed, components = components)
+            else:            
+                logging.info(f"send response: {self.interaction.message.id}")
+                channel = self.interaction.message.channel
+                await channel.send(content = content, embed = embed, components = components)
+                await self.interaction.message.delete()
             
-        except NotFound as ex:
-            await self.interaction.message.delete()
-            if self.message != None:
-                await self.message.channel.send(content = content, embed = embed, components = components)
-            else:
-                logging.warning("todo")
-                # todo - send message by user id
         except Exception as ex:
-            logging.error(f"exception: {ex}")
+            try:
+                logging.warning("????????????????????????? todo ?????????????????????????")
+            except Exception as ex:
+                logging.error(f"exception: {ex}")

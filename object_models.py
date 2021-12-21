@@ -3,6 +3,7 @@ import logging
 from types import SimpleNamespace
 from object_state import *
 from database_models import Clan, Match
+from user_state import UserState
 
 
 #########################################################################################
@@ -280,9 +281,19 @@ class MatchConfirm(ObjectState):
     def __init__(self, state): 
         ObjectState.__init__(self, MatchConfirm.name, state)
 
-    def cmd(state, confirm = None, option = None) -> str:
+    def cmd(state : UserState, confirm = None, option = None) -> str:
         state.current.options.append(option)
         return json.dumps({ "action": MatchConfirm.name, "input": state.current.last_option(), "result": confirm })
+
+
+class SearchMatch(ObjectState):
+    name = "SEARCH_MATCH"
+    def __init__(self, state): 
+        ObjectState.__init__(self, SearchMatch.name, state)
+
+    def cmd(state, confirm = None, option = None) -> str:
+        state.current.options.append(option)
+        return json.dumps({ "action": SearchMatch.name, "input": state.current.last_option(), "result": confirm })
 
 
 class InputFromMessageOption:

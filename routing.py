@@ -5,6 +5,7 @@ from pages.match_duration import match_duration
 from pages.match_players import match_players
 from pages.select_clan import select_clan
 from pages.search_clan import search_clan, search_clan_callback
+from pages.search_match import search_match, search_match_callback
 from pages.manage_clans import manage_clans, edit_clan, delete_clan, delete_clan_confirm
 from pages.new_match import new_match
 from pages.match_result import match_result
@@ -26,6 +27,7 @@ actions = {
     DeleteClan.name:        delete_clan,
     DeleteClanConfirm.name: delete_clan_confirm,
     NewMatch.name:          new_match,
+    SearchMatch.name:       search_match,
     MatchResult.name:       match_result,
     MatchDuration.name:     match_duration,
     MatchPlayers.name:      match_players,
@@ -43,5 +45,6 @@ async def other_action(state, args):
 
 callbacks = {
     SearchClan.name:        search_clan_callback,
+    SearchMatch.name:       search_match_callback,
     InputFromMessage.name:  input_from_message_callback,
 }

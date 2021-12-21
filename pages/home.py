@@ -1,9 +1,12 @@
+from datetime import date, timedelta
 import logging
 from types import SimpleNamespace
+from typing import List
 import discord
 from discord_components.component import Button
 from database_models import Match, Matches
 from object_models import *
+from user_state import UserState
 
 match_status_emoji = {
     3: "❓", # not confirmed, show first
@@ -28,7 +31,7 @@ def match_status(state, match):
 # process message from user #
 #############################
 
-async def home(state, cmd : SimpleNamespace):
+async def home(state : UserState, cmd : SimpleNamespace):
     states = state.pop_to(Home)
     logging.info(f"states = {states}")
     if state.current.name != "HOME":
@@ -38,15 +41,14 @@ async def home(state, cmd : SimpleNamespace):
         f"User: {state.user.name} ({state.user.role})",
         f"Clan: {state.clan.flag} {state.clan.tag}" if state.clan != None else None,
         f"",
-        f"**__Legend__** (up to 5 matches)",
+        f"**__Legend__** (up to 5 matches, up to 2 weeks)",
         f"{match_status_emoji[3]} waiting for confirmation",
         f"{match_status_emoji[2]} waiting for opponent confirmation",
         f"{match_status_emoji[1]} confirmed by both parties (or admin)",
     ])
 
     # build match buttons
-    matches = Matches.get(clan1_id=state.clan.id)
-    matches.extend(Matches.get(clan2_id=state.clan.id))
+    matches : List[Match] = Matches.get(clan_id=state.clan.id, date_from=date.today() - timedelta(days = 14))
     matches.sort(key=lambda m: f"{match_status(state, m)}|{m.date}", reverse=True) # first, sort by status, then sort by date
     matchButtons = []
     for match in matches:
@@ -69,6 +71,8 @@ async def home(state, cmd : SimpleNamespace):
                    custom_id = NewMatch.cmd(state, option=NewMatchOption(match=new_own_match, next_step="COOP1"))),
             Button(emoji = "🚼", label = "new match (admin)",
                    custom_id = NewMatch.cmd(state, option=NewMatchOption(match=Match(), next_step="CLAN1"))), 
+            Button(emoji = "🔎", label = "search match (admin)",
+                   custom_id = SearchMatch.cmd(state)),
         ], [
 #            Button(emoji = "🗂️", label = "select clan",
 #                   custom_id = SelectClan.cmd(state, option = SelectClanOption(title = "Select Clan"))), 

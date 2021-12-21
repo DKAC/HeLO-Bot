@@ -266,7 +266,7 @@ class Match():
 
 class Matches():
     
-    def get(id = None, clan1_id = None, clan2_id = None):
+    def get(id = None, match_id = None, clan_id = None, clan1_id = None, clan2_id = None, date_from = None):
         logging.info(f"Matches GET")
         if id != None:
             response = requests.get(f"{heloUrl}/match/{id}")
@@ -274,10 +274,13 @@ class Matches():
             match = Match(jMatch = jClan) # build object from json
             return match
         else:
-            clan_args = []
-            if clan1_id != None: clan_args.append(f"clan1_id={clan1_id}")
-            if clan2_id != None: clan_args.append(f"clan2_id={clan2_id}")
-            url_param = f'?{"&".join(clan_args)}' if len(clan_args) > 0 else ""
+            args = []
+            if match_id != None: args.append(f"match_id={match_id}")
+            if clan_id != None: args.append(f"clan_id={clan_id}")
+            if clan1_id != None: args.append(f"clan1_id={clan1_id}")
+            if clan2_id != None: args.append(f"clan2_id={clan2_id}")
+            if date_from    != None: args.append(f"date_from={date_from}")
+            url_param = f'?{"&".join(args)}' if len(args) > 0 else ""
             response = requests.get(f"{heloUrl}/matches{url_param}")
             jMatches = json.loads(response.content) # get data from REST service
             matches = [Match(jMatch = jMatch) for jMatch in jMatches] # build objects from json
