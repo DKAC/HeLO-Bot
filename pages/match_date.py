@@ -12,7 +12,7 @@ from messages.match_message import match_description
 
 def d(days): return date.today() - timedelta(days = days)
 def c(days): return d(days).isoformat()
-def s(days): return d(days).strftime('%d %b')
+def s(days): return "today" if days == 0 else "yesterday" if days == 1 else d(days).strftime('%d %b')
 
 async def match_date(state, cmd : SimpleNamespace):
     logging.info(f"{cmd}")    

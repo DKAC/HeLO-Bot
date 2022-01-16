@@ -2,6 +2,7 @@ import logging
 
 from database_models import Clans, Matches, Match
 from messages.match_message import *
+from messages.score_message import ScoresMessage
 from pages.select_clan import *
 from object_models import *
 from env import *
@@ -51,7 +52,11 @@ async def new_match(state, cmd : SimpleNamespace):
             match.caps2 = 5 - result.caps1
             match.side1 = result.side1
             match.side2 = "Axis" if result.side1 == "Allies" else "Allies"
-            state.current.next_step = "DURATION"
+            if match.caps1 == 5 or match.caps2 == 5:
+                match.duration = 90
+                state.current.next_step = "PLAYERS"
+            else:
+                state.current.next_step = "DURATION"
 
         elif state.current.next_step == "DURATION":
             logging.info(f"DURATION: {result.duration}")
@@ -98,8 +103,11 @@ async def new_match(state, cmd : SimpleNamespace):
                 match.match_id = match_id
                 Matches.create(state, match)
 
-            logging.info(f"create/update discord message: {match.conf1}, {match.conf2}")
+            logging.info(f"create/update march message: {match.conf1}, {match.conf2}")
             await MatchMessage.send(state)
+
+            logging.info(f"create/update scores message")
+            await ScoresMessage.send(state)
 
             state.current.next_step = "DONE"
             

@@ -4,8 +4,8 @@ from discord.errors import NotFound
 from discord_components.component import Button
 from discord_components.interaction import Interaction
 from database_models import Auth, Clans
-from pages.home import *
-from data import *
+from pages.home import * 
+from data import * 
 from object_models import *
 
 
@@ -43,7 +43,7 @@ async def clear_perform(state, cmd):
     logging.info(f"clear numpad input")
     state.current.input = ""
     await state.current.respond()
-
+        
 
 async def login_perform(state, cmd):
     logging.info(f"show numpad")

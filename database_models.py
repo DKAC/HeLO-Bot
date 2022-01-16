@@ -116,19 +116,21 @@ class Users():
 ########
 class Clan():
     
-    def __init__(self, id = "", tag = "", name = "", flag = "", invite = "", jClan = None):
+    def __init__(self, id = "", tag = "", name = "", flag = "", invite = "", score = 0, jClan = None):
         if jClan != None:
             self.id     : str = jClan["_id"]["$oid"]
             self.tag    : str = jClan["tag"]    if "tag" in jClan else ""
             self.name   : str = jClan["name"]   if "name" in jClan else ""
             self.flag   : str = jClan["flag"]   if "flag" in jClan else ""
             self.invite : str = jClan["invite"] if "invite" in jClan else ""
+            self.score  : int = jClan["score"]  if "score" in jClan else 0
         else:
             self.id : str = id
             self.tag : str = tag
             self.name : str = name
             self.flag : str = flag
             self.invite : str = invite
+            self.score : int = score
 
     def __repr__(self): return json.dumps(self.__dict__)
 

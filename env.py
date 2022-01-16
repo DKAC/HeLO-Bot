@@ -3,6 +3,7 @@ from discord_components.client import DiscordComponents
 
 discord_token = os.environ.get("DISCORD_TOKEN")
 matches_channel = os.environ.get("MATCHES_CHANNEL")
+scores_channel = os.environ.get("SCORES_CHANNEL")
 heloUrl = os.environ.get("HELO_URL")
 
 tz = pytz.timezone("Europe/Berlin")

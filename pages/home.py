@@ -47,6 +47,9 @@ async def home(state : UserState, cmd : SimpleNamespace):
         f"{match_status_emoji[1]} confirmed by both parties (or admin)",
     ])
 
+    embed = discord.Embed(title="HeLO - Hell Let Loose ELO", description=description)
+    components = []
+
     # build match buttons
     matches : List[Match] = Matches.get(clan_id=state.clan.id, date_from=date.today() - timedelta(days = 14))
     matches.sort(key=lambda m: f"{match_status(state, m)}|{m.date}", reverse=True) # first, sort by status, then sort by date
@@ -59,11 +62,10 @@ async def home(state : UserState, cmd : SimpleNamespace):
             label = f"{match.date} {match.clan1} vs. {match.clan2}", 
             custom_id = NewMatch.cmd(state, option = NewMatchOption(next_step="CONFIRM", match=match))
         ))
+    if matchButtons != []: components.append(matchButtons)
 
-    embed = discord.Embed(title="HeLO - Hell Let Loose ELO", description=description)
     new_own_match = Match(clan1_id=state.clan.id, clan1=state.clan.tag)
-    components = [
-        matchButtons,
+    components.append(
         [
             Button(emoji = "🚹", label = "new match",
                    custom_id = NewMatch.cmd(state, option=NewMatchOption(match=new_own_match, next_step="CLAN2"))), 
@@ -73,7 +75,8 @@ async def home(state : UserState, cmd : SimpleNamespace):
                    custom_id = NewMatch.cmd(state, option=NewMatchOption(match=Match(), next_step="CLAN1"))), 
             Button(emoji = "🔎", label = "search match (admin)",
                    custom_id = SearchMatch.cmd(state)),
-        ], [
+        ])
+    components.append([
 #            Button(emoji = "🗂️", label = "select clan",
 #                   custom_id = SelectClan.cmd(state, option = SelectClanOption(title = "Select Clan"))), 
 #            Button(emoji = "🔎", label = "search clan",
@@ -84,10 +87,11 @@ async def home(state : UserState, cmd : SimpleNamespace):
                    custom_id = ManageUsers.cmd(state)),
             Button(emoji = "🗄️", label = "**events**",
                    custom_id = ManageEvents.cmd(state)),
-        ], [
+        ])
+    components.append([
             Button(emoji = "🔒", label = "logout", custom_id = Login.cmd("LOGOUT")),
         ],
-    ]
+    )
     await state.interaction.respond(type = 7, content = "", embed = embed, components = components)    
 
 
