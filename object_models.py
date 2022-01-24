@@ -2,7 +2,7 @@ import json
 import logging
 from types import SimpleNamespace
 from object_state import *
-from database_models import Clan, Match, User
+from database_models import Clan, Match, User, Event
 from user_state import UserState
 
 
@@ -197,6 +197,82 @@ class DeleteClanConfirm(ObjectState):
         return json.dumps({ "action": DeleteClanConfirm.name, "input": state.current.last_option(), "result": confirm })
 
         
+class ManageEvents(ObjectState):
+    name = "MANAGE_EVENTS"
+    def __init__(self, state):
+        ObjectState.__init__(self, ManageEvents.name, state)
+
+    def cmd(state) -> str:
+        return json.dumps({ "action": ManageEvents.name, "input": None, "result": None, "callback": None })
+
+        
+class AddEvent(ObjectState):
+    name = "ADD_EVENT"
+    def __init__(self, state, next_step, title): 
+        ObjectState.__init__(self, AddEvent.name, state)
+        self.next_step = next_step
+        self.title = title
+
+    def cmd(state) -> str:
+        return json.dumps({ "action": AddEvent.name, "input": None, "result": None, "callback": None })
+
+        
+class EditEventOption:
+    def __init__(self, next_step = None, title = ""):
+        self.next_step = next_step
+        self.title = title
+
+    def __repr__(self): return json.dumps(self.__dict__)
+
+
+class EditEvent(ObjectState):
+    name = "EDIT_EVENT"
+    def __init__(self, state, next_step, title): 
+        ObjectState.__init__(self, EditEvent.name, state)
+        self.next_step = next_step        
+        self.title = title
+        self.event : Event
+
+    def cmd(state, confirm = None, option = EditEventOption()) -> str:
+        return json.dumps({ "action": EditEvent.name, "input": state.current.last_option(), "result": confirm })
+
+
+class DeleteEventOption:
+    def __init__(self, next_step = None, title = ""):
+        self.next_step = next_step
+        self.title = title
+
+    def __repr__(self): return json.dumps(self.__dict__)
+
+
+class DeleteEvent(ObjectState):
+    name = "DELETE_EVENT"
+    def __init__(self, state, next_step): 
+        ObjectState.__init__(self, DeleteEvent.name, state)
+        self.next_step = next_step
+
+    def cmd(state, confirm = None, option = DeleteClanOption()) -> str:
+        state.current.options.append(option)
+        return json.dumps({ "action": DeleteEvent.name, "input": state.current.last_option(), "result": confirm })
+
+
+class DeleteEventConfirmOption:
+    def __init__(self, event = None):
+        self.event = event
+
+    def __repr__(self): return json.dumps(self.__dict__)
+        
+                
+class DeleteEventConfirm(ObjectState):
+    name = "DELETE_EVENT_CONFIRM"
+    def __init__(self, state): 
+        ObjectState.__init__(self, DeleteEventConfirm.name, state)
+
+    def cmd(state, confirm = None, option = DeleteEventOption()) -> str:
+        state.current.options.append(option)
+        return json.dumps({ "action": DeleteEventConfirm.name, "input": state.current.last_option(), "result": confirm })
+
+        
 class SelectFlag(ObjectState):
     name = "SELECT_FLAG"
     def __init__(self, state): 
@@ -204,7 +280,25 @@ class SelectFlag(ObjectState):
 
     def cmd(state, input = None, option = None) -> str:
         return json.dumps({ "action": SelectFlag.name, "input": input, "result": None })
-    
+
+
+class SelectEmoji(ObjectState):
+    name = "SELECT_EMOJI"
+    def __init__(self, state): 
+        ObjectState.__init__(self, SelectEmoji.name, state)
+
+    def cmd(state, input = None, option = None) -> str:
+        return json.dumps({ "action": SelectEmoji.name, "input": input, "result": None })
+
+        
+class SelectFactor(ObjectState):
+    name = "SELECT_FACTOR"
+    def __init__(self, state): 
+        ObjectState.__init__(self, SelectFactor.name, state)
+
+    def cmd(state, input = None, option = None) -> str:
+        return json.dumps({ "action": SelectFactor.name, "input": input, "result": None })
+        
 
 class SelectClanOption:
     def __init__(self, selected = None, next_step = None, is_showing_coop = False, from_search = False, title = ""):
@@ -421,6 +515,11 @@ class InputFromMessageOption:
 
 
 class SelectFlagOption:
+    def __init__(self, field = ""):
+        self.field = field
+
+
+class SelectEmojiOption:
     def __init__(self, field = ""):
         self.field = field
 

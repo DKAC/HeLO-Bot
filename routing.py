@@ -1,6 +1,7 @@
 from object_models import *
 from pages.login import login
 from pages.home import home
+from pages.manage_events import delete_event, delete_event_confirm,  edit_event, manage_events
 from pages.match_duration import match_duration
 from pages.match_players import match_players
 from pages.select_clan import select_clan
@@ -15,6 +16,7 @@ from pages.match_date import match_date
 from pages.select_event import select_event
 from pages.select_map import select_map
 from pages.select_flag import select_flag
+from pages.select_factor import select_factor
 from pages.match_confirm import match_confirm
 from pages.input_from_message import input_from_message, input_from_message_callback
 from pages.select_role import select_role
@@ -30,6 +32,11 @@ actions = {
     EditClan.name:          edit_clan,
     DeleteClan.name:        delete_clan,
     DeleteClanConfirm.name: delete_clan_confirm,
+    ManageEvents.name:      manage_events,
+    AddEvent.name:          edit_event,
+    EditEvent.name:         edit_event,
+    DeleteEvent.name:       delete_event,
+    DeleteEventConfirm.name:delete_event_confirm,
     SelectUser.name:        select_user,
     SearchUser.name:        search_user,
     ManageUsers.name:       manage_users,
@@ -46,6 +53,7 @@ actions = {
     SelectMap.name:         select_map,
     SelectEvent.name:       select_event,
     SelectFlag.name:        select_flag,
+    SelectFactor.name:      select_factor,
     MatchConfirm.name:      match_confirm,
     InputFromMessage.name:  input_from_message,
     SelectRole.name:        select_role,

@@ -3,6 +3,7 @@ from discord.embeds import Embed
 from discord_components.component import Button
 from object_models import *
 from messages.match_message import match_description
+from env import *
 
 #############################
 # process message from user #
@@ -16,7 +17,7 @@ async def match_players(state, cmd : SimpleNamespace):
     
     state.push(MatchPlayers(state.current))
     
-    embed = Embed(title = "Match players", description = f"{match_description(state)}**Select match players**")
+    embed = Embed(title = match_players_title, description = match_players_description(match_description(state)))
     
     components = [
         [
@@ -30,7 +31,7 @@ async def match_players(state, cmd : SimpleNamespace):
             Button(label = "20", custom_id = MatchPlayers.cmd( state, players = 20 ) ),
             Button(label = "15", custom_id = MatchPlayers.cmd( state, players = 15 ) ),
         ], [            
-            Button(emoji='🔼', custom_id = Home.cmd(state))
+            Button(emoji=emoji_home, custom_id = Home.cmd(state))
         ]        
     ]
     

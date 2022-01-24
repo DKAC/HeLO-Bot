@@ -103,7 +103,7 @@ async def new_match(state, cmd : SimpleNamespace):
                 match.match_id = match_id
                 Matches.create(state, match)
 
-            logging.info(f"create/update march message: {match.conf1}, {match.conf2}")
+            logging.info(f"create/update match message: {match.conf1}, {match.conf2}")
             await MatchMessage.send(state)
 
             logging.info(f"create/update scores message")

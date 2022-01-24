@@ -5,6 +5,7 @@ from database_models import *
 from data import *
 from object_models import *
 from user_state import UserState
+from env import *
 
 
 async def manage_users(state, cmd : SimpleNamespace):
@@ -19,7 +20,7 @@ async def manage_users(state, cmd : SimpleNamespace):
         state.push(ManageUsers(state))   
     
     
-    embed = Embed(title = "Manage Users")
+    embed = Embed(title = users_title)
     
     components = [
         [            
@@ -41,10 +42,10 @@ async def edit_user(state : UserState, cmd : SimpleNamespace):
     if cmd.result == None:
         if cmd.action == EditUser.name:
             cmd = state.current.options[cmd.input]
-            state.push(EditUser(state.current, cmd.next_step, "Edit User"))
+            state.push(EditUser(state.current, cmd.next_step, users_edit))
         else:           
             cmd = EditUserOption(next_step=EditUser.name)
-            state.push(EditUser(state.current, cmd.next_step, "Add User"))
+            state.push(EditUser(state.current, cmd.next_step, users_add))
             state.current.user = User(f"local_{int(time.time())}") # id will be replaced when creating the user via REST service
             
     else:       
@@ -83,25 +84,20 @@ async def edit_user(state : UserState, cmd : SimpleNamespace):
     
     clan = Clans.get(state.current.user.clan) if state.current.user.clan != None else None
     
-    description = "\n".join([
-        f"User ID: {state.current.user.userid}",
-        f"Name: {state.current.user.name}",
-        f"Clan: {clan.tag}" if clan != None else f"Clan: {state.current.user.clan}",
-        f"Role: {state.current.user.role}"
-    ])
+    description = users_description(state.current.user, clan)
     if error != None: description += f"\n\n{error}"
             
     embed = Embed(title = state.current.title, description = description)
     components = [
         [
-            Button(emoji = "🏷️", label = "user", custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_USERID", "Enter User ID"))),
-            Button(emoji = "📛", label = "name", custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_NAME", "Enter User Name"))),
-            Button(emoji = "🚹", label = "clan", custom_id = SearchClan.cmd(state)),
-            Button(emoji = "🗝️", label = "role", custom_id = SelectRole.cmd(state)),
+            Button(emoji = emoji_tag, label = users_userid, custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_USERID", users_userid_title))),
+            Button(emoji = emoji_name, label = users_name, custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_NAME", users_name_title))),
+            Button(emoji = emoji_clan, label = users_clan, custom_id = SearchClan.cmd(state)),
+            Button(emoji = emoji_role, label = users_role, custom_id = SelectRole.cmd(state)),
         ],
         [
-            Button(emoji='🆗', custom_id = EditUser.cmd(state, confirm = "CONFIRM")),
-            Button(emoji='🔼', custom_id = Home.cmd(state))
+            Button(emoji=emoji_ok, custom_id = EditUser.cmd(state, confirm = "CONFIRM")),
+            Button(emoji=emoji_home, custom_id = Home.cmd(state))
         ]
     ]
     
@@ -134,7 +130,7 @@ async def delete_user(state, cmd : SimpleNamespace):
             state.current.next_step = "DONE"
 
     if state.current.next_step == None: # first step: search for USER
-        return SearchUser.cmd(state, option = SearchUserOption(title = "Delete User"))
+        return SearchUser.cmd(state, option = SearchUserOption(title = users_delete_title))
 
     if state.current.next_step == "CONFIRM":     
         return DeleteUserConfirm.cmd(state, option = DeleteUserConfirmOption(user = state.current.user))
@@ -151,7 +147,7 @@ async def delete_user_confirm(state, cmd : SimpleNamespace):
     
     state.push(DeleteUserConfirm(state.current))
     
-    embed = Embed(title = "Confirm user deletion", description = f"**Are you absolutely sure, this user should be deleted?**")
+    embed = Embed(title = users_delete_confirm_title, description = users_delete_confirm_description)
     
     components = [
         [

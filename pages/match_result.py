@@ -4,6 +4,7 @@ from discord_components.component import Button
 from discord_components.interaction import Interaction
 from object_models import *
 from messages.match_message import match_description
+from env import *
 
 
 #############################
@@ -21,31 +22,31 @@ async def match_result(state, cmd : SimpleNamespace):
     
     state.push(MatchResult(state.current))
     
-    embed = Embed(title = "Match result", description = f"{match_description(state)}**Select match result and side below**")
+    embed = Embed(title = match_result_title, description = match_result_description(match_description(state)))
     
     components = [
         [            
             Button(label = "Allies", custom_id = MatchResult.cmd( state, side1 = "Allies1" ) ),
-            Button(label = "5️⃣:0️⃣", custom_id = MatchResult.cmd( state, caps1 = 5, side1 = "Allies" ) ),
-            Button(label = "4️⃣:1️⃣", custom_id = MatchResult.cmd( state, caps1 = 4, side1 = "Allies" ) ),
-            Button(label = "3️⃣:2️⃣", custom_id = MatchResult.cmd( state, caps1 = 3, side1 = "Allies" ) )
+            Button(label = f"{emoji_five}:{emoji_zero}", custom_id = MatchResult.cmd( state, caps1 = 5, side1 = "Allies" ) ),
+            Button(label = f"{emoji_four}:{emoji_one}", custom_id = MatchResult.cmd( state, caps1 = 4, side1 = "Allies" ) ),
+            Button(label = f"{emoji_three}:{emoji_two}", custom_id = MatchResult.cmd( state, caps1 = 3, side1 = "Allies" ) )
         ], [            
             Button(label = "Allies", custom_id = MatchResult.cmd( state, side1 = "Allies2" ) ),
-            Button(label = "2️⃣:3️⃣", custom_id = MatchResult.cmd( state, caps1 = 2, side1 = "Allies" ) ),
-            Button(label = "1️⃣:4️⃣", custom_id = MatchResult.cmd( state, caps1 = 1, side1 = "Allies" ) ),
-            Button(label = "0️⃣:5️⃣", custom_id = MatchResult.cmd( state, caps1 = 0, side1 = "Allies" ) )
+            Button(label = f"{emoji_two}:{emoji_three}", custom_id = MatchResult.cmd( state, caps1 = 2, side1 = "Allies" ) ),
+            Button(label = f"{emoji_one}:{emoji_four}", custom_id = MatchResult.cmd( state, caps1 = 1, side1 = "Allies" ) ),
+            Button(label = f"{emoji_zero}:{emoji_five}", custom_id = MatchResult.cmd( state, caps1 = 0, side1 = "Allies" ) )
         ], [            
             Button(label = "Axis", custom_id = MatchResult.cmd( state, side1 = "Axis1" ) ),
-            Button(label = "5️⃣:0️⃣", custom_id = MatchResult.cmd( state, caps1 = 5, side1 = "Axis" ) ),
-            Button(label = "4️⃣:1️⃣", custom_id = MatchResult.cmd( state, caps1 = 4, side1 = "Axis" ) ),
-            Button(label = "3️⃣:2️⃣", custom_id = MatchResult.cmd( state, caps1 = 3, side1 = "Axis" ) )
+            Button(label = f"{emoji_five}:{emoji_zero}", custom_id = MatchResult.cmd( state, caps1 = 5, side1 = "Axis" ) ),
+            Button(label = f"{emoji_four}:{emoji_one}", custom_id = MatchResult.cmd( state, caps1 = 4, side1 = "Axis" ) ),
+            Button(label = f"{emoji_three}:{emoji_two}", custom_id = MatchResult.cmd( state, caps1 = 3, side1 = "Axis" ) )
         ], [            
             Button(label = "Axis", custom_id = MatchResult.cmd( state, side1 = "Axis2" ) ),
-            Button(label = "2️⃣:3️⃣", custom_id = MatchResult.cmd( state, caps1 = 2, side1 = "Axis" ) ),
-            Button(label = "1️⃣:4️⃣", custom_id = MatchResult.cmd( state, caps1 = 1, side1 = "Axis" ) ),
-            Button(label = "0️⃣:5️⃣", custom_id = MatchResult.cmd( state, caps1 = 0, side1 = "Axis" ) )
+            Button(label = f"{emoji_two}:{emoji_three}", custom_id = MatchResult.cmd( state, caps1 = 2, side1 = "Axis" ) ),
+            Button(label = f"{emoji_one}:{emoji_four}", custom_id = MatchResult.cmd( state, caps1 = 1, side1 = "Axis" ) ),
+            Button(label = f"{emoji_zero}:{emoji_five}", custom_id = MatchResult.cmd( state, caps1 = 0, side1 = "Axis" ) )
         ], [
-            Button(emoji='🔼', custom_id = Home.cmd(state))            
+            Button(emoji=emoji_home, custom_id = Home.cmd(state))            
         ]
     ]
     

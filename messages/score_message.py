@@ -1,4 +1,5 @@
 import datetime
+from multiprocessing.connection import Client
 from discord.embeds import Embed
 from database_models import Clan, Clans, Match
 from object_models import NewMatch
@@ -24,7 +25,10 @@ class ScoresMessage:
         embed = Embed(title=f"HeLO Ranking and Scores", description=description)
         embed.set_footer(text=f"{datetime.datetime.now().isoformat(sep=' ', timespec='minutes')}")
         channel = discordClient.get_channel(int(scores_channel))
-
-        
-        m = await channel.send(embed=embed)
-        logging.info(f"added message: {m.id}")        
+        messages = await channel.history(limit=1).flatten()
+        if messages[0] is not None:
+            await messages[0].edit(embed=embed)
+            logging.info(f"updated message: {messages[0].id}")
+        else:
+            m = await channel.send(embed=embed)
+            logging.info(f"added message: {m.id}")

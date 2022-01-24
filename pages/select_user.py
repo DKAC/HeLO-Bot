@@ -10,7 +10,7 @@ async def select_user(state, cmd : SimpleNamespace):
     if cmd.input != None:
         opt = state.current.options[cmd.input]
         if len(opt.selected) == 1:
-            return Return.cmd(state, result = { "field": EditUser.name, "userid": opt.selected[0] })
+            return Return.cmd(state, result = { "field": EditUser.name, "userid": opt.selected[0].userid })
     
         state.push(SelectUser(state))
         state.current.interaction = state.parent.interaction

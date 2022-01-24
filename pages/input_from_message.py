@@ -2,7 +2,7 @@ import discord, logging
 from data import *
 from object_models import *
 from pages.new_match import *
-
+from env import *
 
 ##################
 # perform action #
@@ -19,7 +19,7 @@ async def input_from_message(state, cmd : SimpleNamespace):
     state.current.callback = "INPUT_FROM_MESSAGE"
     state.current.options = [input]
     
-    embed = discord.Embed(title = input.title, description = "Enter value as message text below:")
+    embed = discord.Embed(title = input.title, description = input_from_message_description)
     await state.interaction.respond(type = 7, content = "", embed = embed, components = [])
     
     

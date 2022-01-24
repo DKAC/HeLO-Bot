@@ -1,5 +1,5 @@
 from datetime import datetime
-import json, requests, os
+import json, requests
 from types import SimpleNamespace
 import logging
 from requests.models import Response
@@ -183,21 +183,23 @@ class Clans():
 #########
 class Event():
     
-    def __init__(self, id = "", tag = "", name = "", flag = "", invite = "", jEvent = None):
+    def __init__(self, id = "", tag = "", name = "", emoji = "", factor = 1.0, invite = "", jEvent = None):
         if jEvent != None:
             self.id : str = jEvent["_id"]["$oid"]
             self.tag : str = jEvent["tag"]
             self.name : str = jEvent["name"]
-            self.flag : str = jEvent["flag"]
+            self.emoji : str = jEvent["emoji"]
+            self.factor : str = jEvent["factor"]
             self.invite : str = jEvent["invite"]
         else:
             self.id : str = id
             self.tag : str = tag
-            self.name : str = name
-            self.flag : str = flag
+            self.name : str = name            
+            self.emoji : str = emoji
+            self.factor : float = factor
             self.invite : str = invite
     
-    def to_json(self): return json.dumps({"tag": self.tag, "name": self.name, "flag": self.flag, "invite": self.invite})
+    def to_json(self): return json.dumps({"tag": self.tag, "name": self.name, "emoji": self.emoji, "invite": self.invite})
                
 class Events():
     

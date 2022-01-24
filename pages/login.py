@@ -7,6 +7,7 @@ from database_models import Auth, Clans
 from pages.home import * 
 from data import * 
 from object_models import *
+from env import *
 
 
 #############################
@@ -22,8 +23,7 @@ async def login(state, cmd : SimpleNamespace):
         "CLEAR" :   clear_perform,
         "AUTH":     auth_perform,
         "LOGIN":    login_perform,
-        "LOGOUT":   logout_perform,
-        "HELP":     help_perform
+        "LOGOUT":   logout_perform
     }
 
     await inputs.get(cmd.input, numpad)(state, cmd)
@@ -49,26 +49,26 @@ async def login_perform(state, cmd):
     logging.info(f"show numpad")
     state.current.input = ""
     
-    title = "Login"
+    title = login_title
     if state.current.title != None: title = state.current.title
     
-    embed = discord.Embed(title=title, description=f"Enter your PIN")
+    embed = discord.Embed(title=title, description=login_description)
     components = [[
-        Button(emoji="1️⃣", custom_id=Login.cmd(1)),
-        Button(emoji="2️⃣", custom_id=Login.cmd(2)),   
-        Button(emoji="3️⃣", custom_id=Login.cmd(3)),   
+        Button(emoji=emoji_one, custom_id=Login.cmd(1)),
+        Button(emoji=emoji_two, custom_id=Login.cmd(2)),   
+        Button(emoji=emoji_three, custom_id=Login.cmd(3)),   
     ], [
-        Button(emoji="4️⃣", custom_id=Login.cmd(4)),
-        Button(emoji="5️⃣", custom_id=Login.cmd(5)),   
-        Button(emoji="6️⃣", custom_id=Login.cmd(6)),   
+        Button(emoji=emoji_four, custom_id=Login.cmd(4)),
+        Button(emoji=emoji_five, custom_id=Login.cmd(5)),   
+        Button(emoji=emoji_six, custom_id=Login.cmd(6)),   
     ], [
-        Button(emoji="7️⃣", custom_id=Login.cmd(7)),
-        Button(emoji="8️⃣", custom_id=Login.cmd(8)),   
-        Button(emoji="9️⃣", custom_id=Login.cmd(9)),   
+        Button(emoji=emoji_seven, custom_id=Login.cmd(7)),
+        Button(emoji=emoji_eight, custom_id=Login.cmd(8)),   
+        Button(emoji=emoji_nine, custom_id=Login.cmd(9)),   
     ], [
-        Button(emoji="◀️", custom_id=Login.cmd("CLEAR")),
-        Button(emoji="0️⃣", custom_id=Login.cmd(0)),   
-        Button(emoji="🆗", custom_id=Login.cmd("AUTH")),   
+        Button(emoji=emoji_back, custom_id=Login.cmd("CLEAR")),
+        Button(emoji=emoji_zero, custom_id=Login.cmd(0)),   
+        Button(emoji=emoji_ok, custom_id=Login.cmd("AUTH")),   
     ]]
     if type(state.current.interaction) == Interaction:
         await state.current.respond(embed = embed, components = components)
@@ -94,7 +94,7 @@ async def auth_perform(state, cmd : SimpleNamespace):
         await home(state, SimpleNamespace(**{ "action": "HOME" }))
         
     else:
-        state.current.title = "❌    Login failed    ❌"
+        state.current.title = login_failed
         await login_perform(state, cmd)
 
 
@@ -102,16 +102,6 @@ async def logout_perform(state, cmd : SimpleNamespace):
     logging.info(f"logout and clear user state")
     interaction = state.interaction
     state.clear()
-    embed = discord.Embed(title="Done", description="logged out")
-    components = [ Button(emoji = '🔑', label = 'Login', custom_id = Login.cmd("LOGIN")) ]
+    embed = discord.Embed(title=logout_title, description=logout_description)
+    components = [ Button(emoji = emoji_login, label = logout_login, custom_id = Login.cmd("LOGIN")) ]
     await interaction.respond(type = 7, content = "", embed = embed, components = components)
-
-
-async def help_perform(state, cmd : SimpleNamespace):
-    logging.info(f"send help message")
-    await state.interaction.channel.send("\n".join([
-        "Usage:", 
-        "- help",
-        "- login",
-        "- logout",
-    ]))

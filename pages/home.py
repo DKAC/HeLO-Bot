@@ -7,12 +7,13 @@ from discord_components.component import Button
 from database_models import Match, Matches
 from object_models import *
 from user_state import UserState
+from env import *
 
 match_status_emoji = {
-    3: "❓", # not confirmed, show first
-    2: "☑️", # confirmed, show second
-    1: "✅", # released, show third
-    0: "🤼", # otherwise
+    3: emoji_status_not_confirmed, # not confirmed, show first
+    2: emoji_status_confirmed, # confirmed, show second
+    1: emoji_status_released, # released, show third
+    0: emoji_status_other, # otherwise
 }
 
 def is_confirmed(state, clan_id, conf):
@@ -37,17 +38,7 @@ async def home(state : UserState, cmd : SimpleNamespace):
     if state.current.name != "HOME":
         state.push(Home(state))
 
-    description = "\n".join([
-        f"User: {state.user.name} ({state.user.role})",
-        f"Clan: {state.clan.flag} {state.clan.tag}" if state.clan != None else None,
-        f"",
-        f"**__Legend__** (up to 5 matches, up to 2 weeks)",
-        f"{match_status_emoji[3]} waiting for confirmation",
-        f"{match_status_emoji[2]} waiting for opponent confirmation",
-        f"{match_status_emoji[1]} confirmed by both parties (or admin)",
-    ])
-
-    embed = discord.Embed(title="HeLO - Hell Let Loose ELO", description=description)
+    embed = discord.Embed(title=home_title, description=home_description(state))
     components = []
 
     # build match buttons
@@ -59,7 +50,7 @@ async def home(state : UserState, cmd : SimpleNamespace):
         # todo - when confirmed or released, do not show match confirmation
         matchButtons.append(Button(
             emoji = match_status_emoji[match_status(state, match)], 
-            label = f"{match.date} {match.clan1} vs. {match.clan2}", 
+            label = home_match_status(match), 
             custom_id = NewMatch.cmd(state, option = NewMatchOption(next_step="CONFIRM", match=match))
         ))
     if matchButtons != []: components.append(matchButtons)
@@ -67,29 +58,24 @@ async def home(state : UserState, cmd : SimpleNamespace):
     new_own_match = Match(clan1_id=state.clan.id, clan1=state.clan.tag)
     components.append(
         [
-            Button(emoji = "🚹", label = "new match",
+            Button(emoji = emoji_clan, label = home_new_match,
                    custom_id = NewMatch.cmd(state, option=NewMatchOption(match=new_own_match, next_step="CLAN2"))), 
-            Button(emoji = "🚻", label = "new coop match",
+            Button(emoji = emoji_coop, label = home_new_coop_match,
                    custom_id = NewMatch.cmd(state, option=NewMatchOption(match=new_own_match, next_step="COOP1"))),
-            Button(emoji = "🚼", label = "new match (admin)",
+            Button(emoji = emoji_clan_admin, label = home_new_match_admin,
                    custom_id = NewMatch.cmd(state, option=NewMatchOption(match=Match(), next_step="CLAN1"))), 
-            Button(emoji = "🔎", label = "search match (admin)",
+            Button(emoji = "🔎", label = home_search_match_admin,
                    custom_id = SearchMatch.cmd(state)),
         ])
     components.append([
-#            Button(emoji = "🗂️", label = "select clan",
-#                   custom_id = SelectClan.cmd(state, option = SelectClanOption(title = "Select Clan"))), 
-#            Button(emoji = "🔎", label = "search clan",
-#                   custom_id = SearchClan.cmd(state, option = SearchClanOption(title = "Search Clan"))),
-            Button(emoji = "🗄️", label = "clans",
-                   custom_id = ManageClans.cmd(state)),
-            Button(emoji = "🗄️", label = "users",
-                   custom_id = ManageUsers.cmd(state)),
-            Button(emoji = "🗄️", label = "**events**",
-                   custom_id = ManageEvents.cmd(state)),
+#            Button(emoji = "🗂️", label = "select clan", custom_id = SelectClan.cmd(state, option = SelectClanOption(title = "Select Clan"))), 
+#            Button(emoji = "🔎", label = "search clan", custom_id = SearchClan.cmd(state, option = SearchClanOption(title = "Search Clan"))),
+            Button(emoji = emoji_data, label = home_clans, custom_id = ManageClans.cmd(state)),
+            Button(emoji = emoji_data, label = home_users, custom_id = ManageUsers.cmd(state)),
+            Button(emoji = emoji_data, label = home_events, custom_id = ManageEvents.cmd(state)),
         ])
     components.append([
-            Button(emoji = "🔒", label = "logout", custom_id = Login.cmd("LOGOUT")),
+            Button(emoji = "🔒", label = home_logout, custom_id = Login.cmd("LOGOUT")),
         ],
     )
     await state.interaction.respond(type = 7, content = "", embed = embed, components = components)    

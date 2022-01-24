@@ -6,6 +6,7 @@ from object_models import *
 from messages.match_message import match_description
 from data import *
 from user_state import UserState
+from env import *
 
 
 #############################
@@ -84,30 +85,36 @@ async def match_confirm(state : UserState, cmd : SimpleNamespace):
     
     state.current.interaction = state.interaction if state.interaction != None else state.parent.interaction
     
-    embed = Embed(title = "Match confirmation", description = f"{match_description(state)}**Confirm match (your user id will be added to the match data)**")
+    embed = Embed(title = match_confirm_title, description = match_confirm_description(match_description(state)))
     
     components = [
         [
-            Button(emoji='🚹', custom_id = SearchClan.cmd(state, SearchClanOption(title = "Change 1. Clan", next_step = "CLAN1"))),
-            Button(emoji='🚻', custom_id = SearchClan.cmd(state, SearchClanOption(title = "Change 1. Coop", next_step = "COOP1"))),
-            Button(label='vs.', custom_id = MatchConfirm.cmd(state)),
-            Button(emoji='🚹', custom_id = SearchClan.cmd(state, SearchClanOption(title = "Change 2. Clan", next_step = "CLAN2"))),
-            Button(emoji='🚻', custom_id = SearchClan.cmd(state, SearchClanOption(title = "Change 2. Coop", next_step = "COOP2"))),
+            Button(emoji=emoji_clan, custom_id = SearchClan.cmd(state, SearchClanOption(title = match_confirm_clan1_title, next_step = "CLAN1"))),
+            Button(emoji=emoji_coop, custom_id = SearchClan.cmd(state, SearchClanOption(title = match_confirm_coop1_title, next_step = "COOP1"))),
+            Button(label=match_confirm_vs, custom_id = MatchConfirm.cmd(state)),
+            Button(emoji=emoji_clan, custom_id = SearchClan.cmd(state, SearchClanOption(title = match_confirm_clan2_title, next_step = "CLAN2"))),
+            Button(emoji=emoji_coop, custom_id = SearchClan.cmd(state, SearchClanOption(title = match_confirm_coop2_title, next_step = "COOP2"))),
         ], [
-            Button(emoji='🎖️', custom_id = SelectEvent.cmd(state, next_step="CONFIRM")),
-            Button(emoji='🗓️', custom_id = MatchDate.cmd(state, next_step="CONFIRM")),
-            Button(emoji='🗺️', custom_id = SelectMap.cmd(state, next_step="CONFIRM")),
+            Button(emoji=emoji_event, custom_id = SelectEvent.cmd(state, next_step="CONFIRM")),
+            Button(emoji=emoji_date, custom_id = MatchDate.cmd(state, next_step="CONFIRM")),
+            Button(emoji=emoji_map, custom_id = SelectMap.cmd(state, next_step="CONFIRM")),
         ], [
-            Button(emoji='5️⃣', custom_id = MatchResult.cmd(state, next_step="CONFIRM")),
-            Button(emoji='⏱️', custom_id = MatchDuration.cmd(state, next_step="CONFIRM") 
+            Button(emoji=emoji_score, custom_id = MatchResult.cmd(state, next_step="CONFIRM")),
+            Button(emoji=emoji_duration, custom_id = MatchDuration.cmd(state, next_step="CONFIRM") 
                    if state.parent.match.caps1 != 0 and state.parent.match.caps2 != 0 else MatchConfirm.cmd(state)),
-            Button(emoji='👨‍👨‍👦‍👦', custom_id = MatchPlayers.cmd(state, next_step="CONFIRM")),
-        ], [
-            Button(emoji='🆗', custom_id = MatchConfirm.cmd(state, confirm = "CONFIRM" )),
-            Button(emoji='🅾️', custom_id = MatchConfirm.cmd(state, confirm = "CONFIRM_ADMIN" )),
-            Button(emoji='🗑️', custom_id = MatchConfirm.cmd(state, confirm = "DELETE" )),
-            Button(emoji='🔼', custom_id = Home.cmd(state)),
+            Button(emoji=emoji_players, custom_id = MatchPlayers.cmd(state, next_step="CONFIRM")),
+        ], [b for b in [
+            Button(emoji=emoji_ok, custom_id = MatchConfirm.cmd(state, confirm = "CONFIRM" )) if confirmed(state.parent.match, state) else None,
+            Button(emoji=emoji_confirm_admin, custom_id = MatchConfirm.cmd(state, confirm = "CONFIRM_ADMIN" )), # TODO if role == admin and not fully confirmed
+            Button(emoji=emoji_delete, custom_id = MatchConfirm.cmd(state, confirm = "DELETE" )), # TODO if role == admin
+            Button(emoji=emoji_home, custom_id = Home.cmd(state)),
+            ] if b != None
         ]
     ]
     
     await state.current.respond(embed = embed, components = components)
+    
+def confirmed(match : Match, state : UserState):
+    if state.clan.id == match.clan1_id and match.conf1 == None: return True
+    if state.clan.id == match.clan2_id and match.conf2 == None: return True
+    return False

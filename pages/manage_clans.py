@@ -5,6 +5,7 @@ from database_models import *
 from data import *
 from object_models import *
 from user_state import UserState
+from env import * 
 
 
 async def manage_clans(state, cmd : SimpleNamespace):
@@ -19,15 +20,15 @@ async def manage_clans(state, cmd : SimpleNamespace):
         state.push(ManageClans(state))   
     
     
-    embed = Embed(title = "Manage Clans")
+    embed = Embed(title = clans_title)
     
     components = [
         [            
-            Button(emoji="🆕", custom_id = AddClan.cmd(state)),
-            Button(emoji="✏️", custom_id = EditClan.cmd(state)),
-            Button(emoji="🗑️", custom_id = DeleteClan.cmd(state)),
+            Button(emoji=emoji_new, custom_id = AddClan.cmd(state)),
+            Button(emoji=emoji_edit, custom_id = EditClan.cmd(state)),
+            Button(emoji=emoji_delete, custom_id = DeleteClan.cmd(state)),
         ], [            
-            Button(emoji='🔼', custom_id = Home.cmd(state))
+            Button(emoji=emoji_home, custom_id = Home.cmd(state))
         ]        
     ]
     
@@ -43,10 +44,10 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
     if cmd.result == None:
         if cmd.action == EditClan.name:
             cmd = state.current.options[cmd.input]
-            state.push(EditClan(state.current, cmd.next_step, "Edit Clan"))
+            state.push(EditClan(state.current, cmd.next_step, clans_edit))
         else:           
             cmd = EditClanOption(next_step=EditClan.name)
-            state.push(EditClan(state.current, cmd.next_step, "Add Clan"))
+            state.push(EditClan(state.current, cmd.next_step, clans_add))
             state.current.clan = Clan(f"local_{int(time.time())}") # id will be replaced when creating the clan via REST service
             
     else:       
@@ -68,7 +69,7 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
         
         elif result.field == "SELECT_TAG":
             if result.input.lower() in [clan.tag.lower() for clan in clans]:
-                error = "***Invalid input: clan with tag '{result.input}' already exists***"
+                error = clans_error_exists(result.input)
             else:
                 state.current.clan.tag = result.input
             
@@ -82,7 +83,7 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
             if result.input.startswith("https://discord.gg/"):
                 state.current.clan.invite = result.input
             else:
-                error = "***Invalid input: discord invites have the form 'https://discord.gg/??????????'***"
+                error = clans_error_invite(result.input)
 
     if state.current.next_step == None: # first step: search for CLAN
         return SearchClan.cmd(state, option = SearchClanOption(title = state.current.title))
@@ -90,27 +91,22 @@ async def edit_clan(state : UserState, cmd : SimpleNamespace):
     if state.current.next_step == "DONE":
         return ManageClans.cmd(state)
     
-    description = "\n".join([
-        f"Tag: {state.current.clan.tag}",
-        f"Name: {state.current.clan.name}",
-        f"Flag: {state.current.clan.flag}",
-        f"Invite: {state.current.clan.invite}"
-    ])
+    description = clans_description(state.curent.clan)
     if error != None: description += f"\n\n{error}"
             
     embed = Embed(title = state.current.title, description = description)
     components = [
         [
-            Button(emoji = "🏷️", label = "tag", custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_TAG", "Enter Clan Tag"))),
-            Button(emoji = "📛", label = "name", custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_NAME", "Enter Clan Name"))),
+            Button(emoji = emoji_tag, label = clans_tag, custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_TAG", clans_tag_title))),
+            Button(emoji = emoji_name, label = clans_name, custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_NAME", clans_name_title))),
         ],
         [
-            Button(emoji = "🏳️‍🌈", label = "flag", custom_id = SelectFlag.cmd(state, option = SelectFlagOption(field = "SELECT_FLAG"))),
-            Button(emoji = "🔗", label = "invite", custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_INVITE", "Enter Disord Invite URL"))),
+            Button(emoji = emoji_flag, label = clans_flag, custom_id = SelectFlag.cmd(state, option = SelectFlagOption(field = "SELECT_FLAG"))),
+            Button(emoji = emoji_link, label = clans_invite, custom_id = InputFromMessage.cmd(state, option = InputFromMessageOption("SELECT_INVITE", clans_invite_title))),
         ],
         [
-            Button(emoji='🆗', custom_id = EditClan.cmd(state, confirm = "CONFIRM")),
-            Button(emoji='🔼', custom_id = Home.cmd(state))
+            Button(emoji=emoji_ok, custom_id = EditClan.cmd(state, confirm = "CONFIRM")),
+            Button(emoji=emoji_home, custom_id = Home.cmd(state))
         ]
     ]
     
@@ -160,7 +156,7 @@ async def delete_clan_confirm(state, cmd : SimpleNamespace):
     
     state.push(DeleteClanConfirm(state.current))
     
-    embed = Embed(title = "Confirm clan deletion", description = f"**Are you absolutely sure, this clan should be deleted?**")
+    embed = Embed(title = clans_delete_confirm_title, description = clans_delete_confirm_description)
     
     components = [
         [
